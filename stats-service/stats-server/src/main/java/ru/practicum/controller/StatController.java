@@ -35,16 +35,16 @@ public class StatController {
 
     @GetMapping("/stats")
     public List<ViewStatsDto> getViewStats(
-            @RequestParam(name = PARAM_START) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @RequestParam(name = PARAM_END) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-            @RequestParam(name = PARAM_URIS, required = false) String[] uris,
-            @RequestParam(name = PARAM_UNIQUE, defaultValue = "false") Boolean unique) {
+            @RequestParam(value = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam(value = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+            @RequestParam(value = "uris", required = false) String[] uris,
+            @RequestParam(value = "unique", defaultValue = "false") Boolean unique) {
 
         log.debug("/getViewStats");
         log.debug("Period to search {} - {}", start, end);
         log.debug("URIs to search {}", uris);
         log.debug("Unique {}", unique);
 
-        return service.getViewStats(start, end, uris, unique);
+        return service.getViewStats(start, end, uris, Boolean.TRUE);
     }
 }
