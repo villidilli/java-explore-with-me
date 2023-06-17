@@ -10,9 +10,6 @@ import ru.practicum.service.StatService;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 @Transactional
 @SpringBootTest(properties = "spring.datasource.url = jdbc:h2:mem:test")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
