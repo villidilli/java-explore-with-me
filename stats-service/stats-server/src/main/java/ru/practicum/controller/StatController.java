@@ -17,8 +17,6 @@ import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static ru.practicum.constant.Constant.*;
-
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -35,10 +33,10 @@ public class StatController {
 
     @GetMapping("/stats")
     public List<ViewStatsDto> getViewStats(
-            @RequestParam(PARAM_START) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @RequestParam(PARAM_END) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-            @RequestParam(name = PARAM_URIS, required = false) String[] uris,
-            @RequestParam(name = PARAM_UNIQUE, defaultValue = "false") Boolean unique) {
+            @RequestParam("start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam("end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+            @RequestParam(name = "uris", required = false) String[] uris,
+            @RequestParam(name = "unique", defaultValue = "false") Boolean unique) {
 
         log.debug("/getViewStats");
         log.debug("Period to search {} - {}", start, end);

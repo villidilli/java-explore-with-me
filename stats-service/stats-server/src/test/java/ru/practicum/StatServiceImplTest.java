@@ -27,8 +27,6 @@ import static org.mockito.Mockito.*;
 public class StatServiceImplTest {
     @Mock
     private StatRepository repository;
-    @Mock
-    private ModelToDtoMapper mapper;
     @InjectMocks
     private StatServiceImpl service;
 
