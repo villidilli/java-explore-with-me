@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-public class TestController {
+public class TestStatsServiceClient {
     private final StatsServiceClient client;
 
     @Autowired
-    public TestController(StatsServiceClient client) {
+    public TestStatsServiceClient(StatsServiceClient client) {
         this.client = client;
     }
 
