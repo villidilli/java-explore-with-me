@@ -37,20 +37,22 @@ public class StatServiceImpl implements StatService {
         log.debug("/getViewStats");
         List<ViewStats> resultFromRepo;
 
-        if (uris.length == 0) {
+        if (uris == null) {
             if (unique) {
                 log.debug("/getStatsIpUnique, uris = null");
                 resultFromRepo = repository.getStatsIpUnique(start, end);
+            } else {
+                log.debug("/getStats, uris = null");
+                resultFromRepo = repository.getStats(start, end);
             }
-            log.debug("/getStats, uris = null");
-            resultFromRepo = repository.getStats(start, end);
         } else {
             if (unique) {
                 log.debug("/getStatsIpUnique, uris have");
                 resultFromRepo = repository.getStatsIpUnique(uris, start, end);
+            } else {
+                log.debug("/getStats, uris have");
+                resultFromRepo = repository.getStats(uris, start, end);
             }
-            log.debug("/getStats, uris have");
-            resultFromRepo = repository.getStats(uris, start, end);
         }
 
         return resultFromRepo.stream()

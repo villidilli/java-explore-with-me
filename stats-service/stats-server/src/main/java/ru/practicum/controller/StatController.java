@@ -45,6 +45,6 @@ public class StatController {
         log.debug("URIs to search {}", uris);
         log.debug("Unique {}", unique);
 
-        return service.getViewStats(start, end, uris, Boolean.TRUE);
+        return service.getViewStats(start, end, uris, unique);
     }
 }
