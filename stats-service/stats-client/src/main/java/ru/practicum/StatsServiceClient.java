@@ -29,7 +29,7 @@ public class StatsServiceClient {
 
     public ResponseEntity<List<ViewStatsDto>> getViewStats(String start, String  end, String[] uris, boolean unique) {
         return webClient.get()
-                .uri(uriBuilder  -> uriBuilder
+                .uri(uriBuilder -> uriBuilder
                         .path("/stats")
                         .queryParam("start", start)
                         .queryParam("end", end)
