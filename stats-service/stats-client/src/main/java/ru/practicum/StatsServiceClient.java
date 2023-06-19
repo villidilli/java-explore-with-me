@@ -1,5 +1,7 @@
 package ru.practicum;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -9,11 +11,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@PropertySource(value={"classpath:client.properties"})
 public class StatsServiceClient {
     private final WebClient webClient;
 
-    public StatsServiceClient() {
-        webClient = WebClient.create("http://localhost:9090");
+
+    public StatsServiceClient(@Value("${stats.server.url}") String baseUrl) {
+        webClient = WebClient.create(baseUrl);
     }
 
     public void saveEndpointHit(String app, String uri, String ip, LocalDateTime timestamp) {
