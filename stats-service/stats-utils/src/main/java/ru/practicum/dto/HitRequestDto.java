@@ -2,7 +2,6 @@ package ru.practicum.dto;
 
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import ru.practicum.constant.StatsConstant;
 
 import java.time.LocalDateTime;
 
