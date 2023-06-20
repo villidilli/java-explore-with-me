@@ -1,4 +1,4 @@
 @NonNullFields
-package ru.practicum;
+package ru.practicum.dto;
 
 import org.springframework.lang.NonNullFields;

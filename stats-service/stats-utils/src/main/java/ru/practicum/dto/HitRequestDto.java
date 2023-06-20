@@ -1,8 +1,8 @@
-package ru.practicum;
+package ru.practicum.dto;
 
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.context.annotation.PropertySource;
+import ru.practicum.constant.StatsConstant;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +15,6 @@ public class HitRequestDto {
     private String app;
     private String uri;
     private String ip;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = StatsConstant.datetimePattern)
     private LocalDateTime timestamp;
 }

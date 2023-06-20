@@ -1,12 +1,10 @@
 package ru.practicum.model;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
+import ru.practicum.dto.HitRequestDto;
+import ru.practicum.dto.ViewStatsDto;
 
-import ru.practicum.HitRequestDto;
-import ru.practicum.ViewStatsDto;
-
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class ModelToDtoMapper {
 
     public static EndpointHit toHitModel(HitRequestDto requestDto) {

@@ -7,11 +7,12 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import ru.practicum.constant.StatsConstant;
 import ru.practicum.model.ModelToDtoMapper;
 import ru.practicum.service.StatService;
 
-import ru.practicum.HitRequestDto;
-import ru.practicum.ViewStatsDto;
+import ru.practicum.dto.HitRequestDto;
+import ru.practicum.dto.ViewStatsDto;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import java.util.List;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-public class StatController {
+public class StatsController {
     private final StatService service;
 
     @PostMapping("/hit")
@@ -33,8 +34,8 @@ public class StatController {
 
     @GetMapping("/stats")
     public List<ViewStatsDto> getViewStats(
-            @RequestParam("start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @RequestParam("end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+            @RequestParam("start") @DateTimeFormat(pattern = StatsConstant.datetimePattern) LocalDateTime start,
+            @RequestParam("end") @DateTimeFormat(pattern = StatsConstant.datetimePattern) LocalDateTime end,
             @RequestParam(name = "uris", required = false) String[] uris,
             @RequestParam(name = "unique", defaultValue = "false") Boolean unique) {
 

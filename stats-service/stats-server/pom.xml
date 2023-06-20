@@ -53,7 +53,7 @@
         </dependency>
         <dependency>
             <groupId>ru.practicum.explorewithme</groupId>
-            <artifactId>stats-dto</artifactId>
+            <artifactId>stats-utils</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import ru.practicum.constant.StatsConstant;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -19,6 +20,6 @@ public class EndpointHit {
     private String app;
     private String uri;
     private String ip;
-    @DateTimeFormat(pattern = "YYYY-MM-DD HH:mm:ss")
+    @DateTimeFormat(pattern = StatsConstant.datetimePattern)
     private LocalDateTime timestamp;
 }
