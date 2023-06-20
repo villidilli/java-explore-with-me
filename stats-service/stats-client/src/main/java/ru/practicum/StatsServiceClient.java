@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@PropertySource(value={"classpath:config.properties"})
+@PropertySource({"classpath:config.properties"})
 public class StatsServiceClient {
     private final WebClient webClient;
 
