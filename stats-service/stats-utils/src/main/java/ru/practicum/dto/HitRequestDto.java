@@ -6,6 +6,8 @@ import ru.practicum.constant.StatsConstant;
 
 import java.time.LocalDateTime;
 
+import static ru.practicum.constant.StatsConstant.datetimePattern;
+
 @Getter
 @Setter
 @ToString
@@ -15,6 +17,6 @@ public class HitRequestDto {
     private String app;
     private String uri;
     private String ip;
-    @JsonFormat(pattern = StatsConstant.datetimePattern)
+    @JsonFormat(pattern = datetimePattern)
     private LocalDateTime timestamp;
 }

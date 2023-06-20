@@ -72,7 +72,7 @@ public class StatServiceImplTest {
     @Test
     public void getStats_whenUniqueTrueUrisNull_thenReturnListDto() {
         List<ViewStats> expected = List.of(viewStats);
-        when(repository.getStatsIpUnique(any(), any(), any())).thenReturn(expected);
+        when(repository.getStatsIpUnique(any(), any())).thenReturn(expected);
 
         List<ViewStatsDto> actual = service.getViewStats(start, end, null, true);
 
@@ -81,13 +81,13 @@ public class StatServiceImplTest {
         assertNotNull(actual.get(0).getApp());
         assertNotNull(actual.get(0).getUri());
 
-        verify(repository, times(1)).getStatsIpUnique(any(), any(), any());
+        verify(repository, times(1)).getStatsIpUnique(any(), any());
     }
 
     @Test
     public void getStats_whenUniqueFalseUrisNull_thenReturnListDto() {
         List<ViewStats> expected = List.of(viewStats);
-        when(repository.getStats(any(), any(), any())).thenReturn(expected);
+        when(repository.getStats(any(), any())).thenReturn(expected);
 
         List<ViewStatsDto> actual = service.getViewStats(start, end, null, false);
 
@@ -96,7 +96,7 @@ public class StatServiceImplTest {
         assertNotNull(actual.get(0).getApp());
         assertNotNull(actual.get(0).getUri());
 
-        verify(repository, times(1)).getStats(any(), any(), any());
+        verify(repository, times(1)).getStats(any(), any());
     }
 
     @Test

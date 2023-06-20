@@ -1,22 +1,21 @@
 package ru.practicum;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
 import ru.practicum.dto.HitRequestDto;
 import ru.practicum.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RestController
+@Controller
+@RequiredArgsConstructor
 public class TestStatsServiceClient {
     private final StatsServiceClient client;
-
-    @Autowired
-    public TestStatsServiceClient(StatsServiceClient client) {
-        this.client = client;
-    }
 
     @PostMapping("/test/hit")
     public void post(@RequestBody HitRequestDto requestDto) {
