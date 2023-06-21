@@ -1,8 +1,8 @@
-package ru.practicum.utils;
+package ru.practicum.utils.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.adminAPI.dto.UserRequestDto;
-import ru.practicum.adminAPI.dto.UserResponseDto;
+import ru.practicum.adminAPI.dto.user.UserRequestDto;
+import ru.practicum.adminAPI.dto.user.UserResponseDto;
 import ru.practicum.adminAPI.model.User;
 
 @UtilityClass

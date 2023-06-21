@@ -18,23 +18,32 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError exceptionHandler(ConstraintViolationException e) {
         log.debug("/conflict handler");
-        ApiError error = new ApiError();
-        error.setStatus(HttpStatus.CONFLICT.name());
-        error.setReason("Data integrity violation");
-        error.setMessage(e.getMessage());
-        error.setTimestamp(LocalDateTime.now());
-        return error;
+        return prepareErrorResponse(HttpStatus.CONFLICT,
+                            "Data integrity violation",
+                                    e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError exceptionHandler(MethodArgumentNotValidException e) {
         log.debug("/conflict handler");
+        return prepareErrorResponse(HttpStatus.BAD_REQUEST,
+                            "Incorrectly request input",
+                                    e.getBindingResult().toString());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError exceptionHandler(NotFoundException e) {
+        log.debug("/not found handler");
+        ApiError error
+    }
+
+    private ApiError prepareErrorResponse(HttpStatus status, String reason, String message) {
         ApiError error = new ApiError();
-        error.setStatus(HttpStatus.CONFLICT.name());
-        error.setReason("Incorrectly request input");
-        error.setMessage(e.getBindingResult().toString());
+        error.setStatus(status.name());
+        error.setReason(reason);
+        error.setMessage(message);
         error.setTimestamp(LocalDateTime.now());
-        return error;
     }
 }
