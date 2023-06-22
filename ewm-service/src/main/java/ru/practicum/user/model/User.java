@@ -1,8 +1,11 @@
-package ru.practicum.adminAPI.model;
+package ru.practicum.user.model;
 
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Size;
 
 @Getter
 @Setter
@@ -15,6 +18,8 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Email
+    @Length(min = 6, max = 254)
     private String email;
     private String name;
 }

@@ -1,9 +1,9 @@
-package ru.practicum.utils.mapper;
+package ru.practicum.category.model;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.adminAPI.dto.category.CategoryRequestDto;
-import ru.practicum.adminAPI.dto.category.CategoryResponseDto;
-import ru.practicum.adminAPI.model.Category;
+import ru.practicum.category.dto.CategoryRequestDto;
+import ru.practicum.category.dto.CategoryResponseDto;
+import ru.practicum.category.model.Category;
 
 @UtilityClass
 public class CategoryMapper {

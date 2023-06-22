@@ -1,4 +1,4 @@
-package ru.practicum.adminAPI.dto.user;
+package ru.practicum.user.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

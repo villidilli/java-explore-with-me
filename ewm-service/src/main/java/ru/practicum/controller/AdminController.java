@@ -1,14 +1,15 @@
-package ru.practicum.adminAPI.controller;
+package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.adminAPI.dto.category.CategoryRequestDto;
-import ru.practicum.adminAPI.dto.category.CategoryResponseDto;
-import ru.practicum.adminAPI.dto.user.UserRequestDto;
-import ru.practicum.adminAPI.dto.user.UserResponseDto;
-import ru.practicum.adminAPI.service.AdminService;
+import ru.practicum.category.dto.CategoryRequestDto;
+import ru.practicum.category.dto.CategoryResponseDto;
+import ru.practicum.category.service.CategoryService;
+import ru.practicum.user.dto.UserRequestDto;
+import ru.practicum.user.dto.UserResponseDto;
+import ru.practicum.user.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -18,7 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/admin")
 public class AdminController {
-    private final AdminService adminService;
+    private final UserService adminService;
+    private final CategoryService categoryService;
 
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
@@ -31,11 +33,11 @@ public class AdminController {
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponseDto createCategory(@Valid @RequestBody CategoryRequestDto categoryRequestDto) {
         log.debug("CategoryDto to create: {}", categoryRequestDto.toString());
-        return adminService.createCategory(categoryRequestDto);
+        return categoryService.createCategory(categoryRequestDto);
     }
 
     @GetMapping("/users")
-    public List<UserResponseDto> getAllUsers(@RequestParam(required = false) Integer[] ids,
+    public List<UserResponseDto> getAllUsers(@RequestParam(required = false) Long[] ids,
                                              @RequestParam(defaultValue = "0") Integer from,
                                              @RequestParam(defaultValue = "10") Integer size) {
         log.debug("/Income parameters: userIds = {}, from = {}, size = {}", ids, from, size);
@@ -55,7 +57,7 @@ public class AdminController {
                                               @Valid @RequestBody CategoryRequestDto categoryRequestDto) {
         log.debug("/update category");
         log.debug("Income parameters: catId: {}, body: {}", catId, categoryRequestDto.toString());
-        return adminService.updateCategory(catId, categoryRequestDto);
+        return categoryService.updateCategory(catId, categoryRequestDto);
     }
 
     @DeleteMapping("/categories/{catId}")
@@ -63,6 +65,6 @@ public class AdminController {
     public void deleteCategory(@PathVariable Long catId) {
         log.debug("/delete category");
         log.debug("Income parameters: catId: {}", catId);
-        adminService.deleteCategory(catId);
+        categoryService.deleteCategory(catId);
     }
 }

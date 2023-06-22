@@ -1,4 +1,4 @@
-package ru.practicum.adminAPI.model;
+package ru.practicum.category.model;
 
 import lombok.*;
 

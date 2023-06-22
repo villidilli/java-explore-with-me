@@ -25,10 +25,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError exceptionHandler(ValidateException e) {
-        log.debug("/conflict handler ValidateException");
+    public ApiError exceptionHandler(FieldConflictException e) {
+        log.debug("/conflict handler FieldConflictException");
         return prepareErrorResponse(HttpStatus.CONFLICT,
                 "Conflict fields",
+                e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError exceptionHandler(ValidateException e) {
+        log.debug("/conflict handler ValidateException");
+        return prepareErrorResponse(HttpStatus.BAD_REQUEST,
+                "Field validation failed",
                 e.getMessage());
     }
 

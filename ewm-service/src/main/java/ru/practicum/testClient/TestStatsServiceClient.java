@@ -1,4 +1,4 @@
-package ru.practicum;
+package ru.practicum.testClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import ru.practicum.StatsServiceClient;
 import ru.practicum.dto.HitRequestDto;
 import ru.practicum.dto.ViewStatsDto;
 
