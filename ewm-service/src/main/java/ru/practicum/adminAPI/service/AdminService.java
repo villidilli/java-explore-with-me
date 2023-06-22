@@ -1,5 +1,7 @@
 package ru.practicum.adminAPI.service;
 
+import ru.practicum.adminAPI.dto.category.CategoryRequestDto;
+import ru.practicum.adminAPI.dto.category.CategoryResponseDto;
 import ru.practicum.adminAPI.dto.user.UserRequestDto;
 import ru.practicum.adminAPI.dto.user.UserResponseDto;
 
@@ -11,4 +13,10 @@ public interface AdminService {
     List<UserResponseDto> getAllUsers(Integer[] ids, Integer from, Integer size);
 
     void deleteUser(Long userId);
+
+    CategoryResponseDto createCategory(CategoryRequestDto categoryRequestDto);
+
+    CategoryResponseDto updateCategory(Long catId, CategoryRequestDto categoryRequestDto);
+
+    void deleteCategory(Long catId);
 }
