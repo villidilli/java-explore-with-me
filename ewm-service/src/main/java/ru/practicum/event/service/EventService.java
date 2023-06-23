@@ -1,8 +1,8 @@
 package ru.practicum.event.service;
 
-import ru.practicum.event.dto.EventRequestDto;
-import ru.practicum.event.dto.EventResponseDto;
+import ru.practicum.event.dto.NewEventDto;
+import ru.practicum.event.dto.EventFullDto;
 
 public interface EventService {
-    EventResponseDto createEvent(Long userId, EventRequestDto eventRequestDto);
+    EventFullDto createEvent(Long userId, NewEventDto eventRequestDto);
 }
