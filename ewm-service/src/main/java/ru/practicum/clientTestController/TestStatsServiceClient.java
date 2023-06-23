@@ -1,4 +1,4 @@
-package ru.practicum.testClient;
+package ru.practicum.clientTestController;
 
 import lombok.RequiredArgsConstructor;
 
