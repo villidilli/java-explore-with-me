@@ -4,7 +4,7 @@ import lombok.experimental.UtilityClass;
 import ru.practicum.category.dto.CategoryResponseDto;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.model.Event;
-import ru.practicum.utils.Status;
+import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
 
 import java.time.LocalDateTime;
@@ -27,7 +27,7 @@ public class EventMapper {
         model.setPaid(dto.getPaid());
         model.setParticipantLimit(dto.getParticipantLimit());
         model.setRequestModeration(dto.getRequestModeration());
-        model.setState(Status.PENDING);
+        model.setState(EventState.PENDING);
         model.setTitle(dto.getTitle());
         return model;
     }

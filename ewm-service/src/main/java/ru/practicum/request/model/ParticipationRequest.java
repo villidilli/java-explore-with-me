@@ -5,7 +5,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.model.User;
 import ru.practicum.utils.Constant;
-import ru.practicum.utils.Status;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -30,5 +29,5 @@ public class ParticipationRequest {
     @DateTimeFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime created;
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private PapticipationRequestState status;
 }

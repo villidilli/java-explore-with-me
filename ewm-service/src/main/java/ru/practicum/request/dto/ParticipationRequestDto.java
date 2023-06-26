@@ -1,9 +1,9 @@
 package ru.practicum.request.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
+import ru.practicum.request.model.PapticipationRequestState;
 import ru.practicum.utils.Constant;
-import ru.practicum.utils.Status;
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -15,12 +15,12 @@ import java.time.LocalDateTime;
 @ToString
 public class ParticipationRequestDto {
     private Long id;
-    @DateTimeFormat(pattern = Constant.dateTimeFormat)
+    @JsonFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime created;
     @NotBlank
     private Long event;
     @NotBlank
     private Long requester;
-    private Status status;
+    private PapticipationRequestState status;
 
 }

@@ -1,11 +1,11 @@
 package ru.practicum.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.category.dto.CategoryResponseDto;
-import ru.practicum.utils.Status;
 import ru.practicum.event.model.Location;
 import ru.practicum.utils.Constant;
+import ru.practicum.event.model.EventState;
 
 import java.time.LocalDateTime;
 
@@ -19,18 +19,19 @@ public class EventFullDto {
     private String annotation;
     private CategoryResponseDto category;
     private Integer confirmedRequests;
+    @JsonFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime createdOn;
     private String description;
-    @DateTimeFormat(pattern = Constant.dateTimeFormat)
+    @JsonFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime eventDate;
     private UserShortDto initiator;
     private Location location;
     private Boolean paid;
     private Integer participantLimit;
-    @DateTimeFormat(pattern = Constant.dateTimeFormat)
+    @JsonFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime publishedOn;
     private Boolean requestModeration;
-    private Status state;
+    private EventState state;
     private String title;
     private Integer views;
 

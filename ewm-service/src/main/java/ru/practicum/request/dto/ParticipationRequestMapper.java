@@ -2,9 +2,9 @@ package ru.practicum.request.dto;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.event.model.Event;
+import ru.practicum.request.model.PapticipationRequestState;
 import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.user.model.User;
-import ru.practicum.utils.Status;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +16,7 @@ public class ParticipationRequestMapper {
         model.setRequester(user);
         model.setEvent(event);
         model.setCreated(LocalDateTime.now());
-        model.setStatus(Status.PENDING);
+        model.setStatus(PapticipationRequestState.PENDING);
         return model;
     }
 

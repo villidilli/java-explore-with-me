@@ -5,7 +5,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.category.model.Category;
 import ru.practicum.user.model.User;
 import ru.practicum.utils.Constant;
-import ru.practicum.utils.Status;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -45,7 +44,7 @@ public class Event {
     @Column(name = "request_moderation")
     private Boolean requestModeration;
     @Enumerated(EnumType.STRING)
-    private Status state;
+    private EventState state;
     private String title;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
