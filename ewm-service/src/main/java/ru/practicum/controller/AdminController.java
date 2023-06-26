@@ -4,14 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.category.dto.CategoryRequestDto;
-import ru.practicum.category.dto.CategoryResponseDto;
+import ru.practicum.category.dto.NewCategoryDto;
+import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.service.CategoryService;
-import ru.practicum.user.dto.UserRequestDto;
-import ru.practicum.user.dto.UserResponseDto;
+import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.model.EventState;
+import ru.practicum.event.service.EventService;
+import ru.practicum.user.dto.NewUserRequest;
+import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.service.UserService;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,25 +25,26 @@ import java.util.List;
 public class AdminController {
     private final UserService adminService;
     private final CategoryService categoryService;
+    private final EventService eventService;
 
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponseDto createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
+    public UserDto createUser(@Valid @RequestBody NewUserRequest userRequestDto) {
         log.debug("UserDto to create: {}", userRequestDto.toString());
         return adminService.createUser(userRequestDto);
     }
 
     @PostMapping("/categories")
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryResponseDto createCategory(@Valid @RequestBody CategoryRequestDto categoryRequestDto) {
+    public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto categoryRequestDto) {
         log.debug("CategoryDto to create: {}", categoryRequestDto.toString());
         return categoryService.createCategory(categoryRequestDto);
     }
 
     @GetMapping("/users")
-    public List<UserResponseDto> getAllUsers(@RequestParam(required = false) Long[] ids,
-                                             @RequestParam(defaultValue = "0") Integer from,
-                                             @RequestParam(defaultValue = "10") Integer size) {
+    public List<UserDto> getAllUsers(@RequestParam(required = false) Long[] ids,
+                                     @RequestParam(defaultValue = "0") Integer from,
+                                     @RequestParam(defaultValue = "10") Integer size) {
         log.debug("/Income parameters: userIds = {}, from = {}, size = {}", ids, from, size);
         return adminService.getAllUsers(ids, from, size);
     }
@@ -53,8 +58,8 @@ public class AdminController {
     }
 
     @PatchMapping("/categories/{catId}")
-    public CategoryResponseDto updateCategory(@PathVariable Long catId,
-                                              @Valid @RequestBody CategoryRequestDto categoryRequestDto) {
+    public CategoryDto updateCategory(@PathVariable Long catId,
+                                      @Valid @RequestBody NewCategoryDto categoryRequestDto) {
         log.debug("/update category");
         log.debug("Income parameters: catId: {}, body: {}", catId, categoryRequestDto.toString());
         return categoryService.updateCategory(catId, categoryRequestDto);
@@ -66,5 +71,20 @@ public class AdminController {
         log.debug("/delete category");
         log.debug("Income parameters: catId: {}", catId);
         categoryService.deleteCategory(catId);
+    }
+
+    @GetMapping("/events")
+    public List<EventFullDto> getEvents(@RequestParam(required = false) Long[] users,
+                                        @RequestParam(required = false) EventState[] states,
+                                        @RequestParam(required = false) Long[] categories,
+                                        @RequestParam(required = false) LocalDateTime rangeStart,
+                                        @RequestParam(required = false) LocalDateTime rangeEnd,
+                                        @RequestParam(defaultValue = "0") Integer from,
+                                        @RequestParam(defaultValue = "10") Integer size) {
+        log.debug("/get events");
+        log.debug("Income parameters: " +
+                "users: {}, states: {}, categories: {}, rangeStart: {}, rangeEnd: {}, from: {}, size: {}",
+                users.toString(), states.toString(), categories.toString(), rangeStart, rangeEnd, from, size);
+        return eventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 }

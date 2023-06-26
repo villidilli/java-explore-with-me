@@ -1,7 +1,7 @@
 package ru.practicum.event.dto;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.category.dto.CategoryResponseDto;
+import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
@@ -36,7 +36,7 @@ public class EventMapper {
         EventFullDto dto = new EventFullDto();
         dto.setId(model.getId());
         dto.setAnnotation(model.getAnnotation());
-        CategoryResponseDto categoryDto = new CategoryResponseDto();
+        CategoryDto categoryDto = new CategoryDto();
         categoryDto.setId(model.getCategory().getId());
         categoryDto.setName(model.getCategory().getName());
         dto.setCategory(categoryDto);

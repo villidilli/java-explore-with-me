@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.user.dto.UserRequestDto;
-import ru.practicum.user.dto.UserResponseDto;
+import ru.practicum.user.dto.NewUserRequest;
+import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 import ru.practicum.exception.FieldConflictException;
@@ -28,18 +28,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto createUser(UserRequestDto userRequestDto) {
+    public UserDto createUser(NewUserRequest userRequestDto) {
         log.debug("/create user");
         validateEmailParts(userRequestDto.getEmail());
         if (userRepository.findByNameContainsIgnoreCase(userRequestDto.getName()).size() != 0)
-            throw new FieldConflictException("Name is already exists");
+            throw new FieldConflictException("Field: name. Error: name is already exists");
         User savedUser = userRepository.save(UserMapper.toModel(userRequestDto));
         log.debug("Присвоен id: {}", savedUser.getId());
         return UserMapper.toDto(savedUser);
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers(Long[] ids, Integer from, Integer size) {
+    public List<UserDto> getAllUsers(Long[] ids, Integer from, Integer size) {
         log.debug("/get all users");
         if (ids == null) {
             return userRepository.findAll(new PageConfig(from, size, Sort.unsorted())).stream()

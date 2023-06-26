@@ -12,7 +12,7 @@ import javax.validation.constraints.NotBlank;
 @Setter
 @NoArgsConstructor
 @ToString
-public class UserRequestDto {
+public class NewUserRequest {
     @NotBlank
     @Length(min = 6, max = 254)
     private String email;

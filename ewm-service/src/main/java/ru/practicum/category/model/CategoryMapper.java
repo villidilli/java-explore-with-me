@@ -1,21 +1,20 @@
 package ru.practicum.category.model;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.category.dto.CategoryRequestDto;
-import ru.practicum.category.dto.CategoryResponseDto;
-import ru.practicum.category.model.Category;
+import ru.practicum.category.dto.NewCategoryDto;
+import ru.practicum.category.dto.CategoryDto;
 
 @UtilityClass
 public class CategoryMapper {
 
-    public Category toModel(CategoryRequestDto categoryRequestDto) {
+    public Category toModel(NewCategoryDto categoryRequestDto) {
         Category model = new Category();
         model.setName(categoryRequestDto.getName());
         return model;
     }
 
-    public CategoryResponseDto toDto(Category category) {
-        CategoryResponseDto dto = new CategoryResponseDto();
+    public CategoryDto toDto(Category category) {
+        CategoryDto dto = new CategoryDto();
         dto.setId(category.getId());
         dto.setName(category.getName());
         return dto;

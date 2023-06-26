@@ -14,21 +14,12 @@ import java.time.LocalDateTime;
 @Slf4j
 public class GlobalExceptionHandler {
 
-//    @ExceptionHandler
-//    @ResponseStatus(HttpStatus.CONFLICT)
-//    public ApiError exceptionHandler(ConstraintViolationException e) {
-//        log.debug("/conflict handler");
-//        return prepareErrorResponse(HttpStatus.CONFLICT,
-//                            "Conflict fields",
-//                                    e.getLocalizedMessage());
-//    }
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError exceptionHandler(FieldConflictException e) {
         log.debug("/conflict handler FieldConflictException");
         return prepareErrorResponse(HttpStatus.CONFLICT,
-                "Conflict fields",
+                "For the requested operation the conditions are not met.",
                 e.getMessage());
     }
 
@@ -37,7 +28,7 @@ public class GlobalExceptionHandler {
     public ApiError exceptionHandler(ValidateException e) {
         log.debug("/conflict handler ValidateException");
         return prepareErrorResponse(HttpStatus.BAD_REQUEST,
-                "Field validation failed",
+                "Incorrectly made request.",
                 e.getMessage());
     }
 
@@ -46,7 +37,7 @@ public class GlobalExceptionHandler {
     public ApiError exceptionHandler(DataIntegrityViolationException e) {
         log.debug("/conflict handler DataIntegrityViolationException");
         return prepareErrorResponse(HttpStatus.CONFLICT,
-                "Conflict fields",
+                "For the requested operation the conditions are not met.",
                 e.getRootCause().getMessage());
     }
 
@@ -55,8 +46,8 @@ public class GlobalExceptionHandler {
     public ApiError exceptionHandler(MethodArgumentNotValidException e) {
         log.debug("/conflict handler MethodArgumentNotValidException");
         return prepareErrorResponse(HttpStatus.BAD_REQUEST,
-                            "Incorrectly request input",
-                                    e.getBindingResult().toString());
+            "Incorrectly made request.",
+            "Field: " + e.getFieldError().getField() + ". Error: " + e.getFieldError().getDefaultMessage());
     }
 
     @ExceptionHandler
@@ -64,7 +55,7 @@ public class GlobalExceptionHandler {
     public ApiError exceptionHandler(NotFoundException e) {
         log.debug("/not found handler");
         return prepareErrorResponse(HttpStatus.NOT_FOUND,
-                                    "Object not found",
+                                    "The required object was not found.",
                                     e.getMessage());
     }
 

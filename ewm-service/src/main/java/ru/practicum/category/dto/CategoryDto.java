@@ -1,4 +1,4 @@
-package ru.practicum.user.dto;
+package ru.practicum.category.dto;
 
 import lombok.*;
 
@@ -7,8 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class UserResponseDto {
+public class CategoryDto {
     private Long id;
-    private String email;
     private String name;
 }

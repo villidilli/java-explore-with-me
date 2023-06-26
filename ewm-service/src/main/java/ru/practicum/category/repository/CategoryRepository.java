@@ -6,5 +6,5 @@ import ru.practicum.category.model.Category;
 import java.util.List;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    List<Category> findByNameContainsIgnoreCase(String name);
+    List<Category> findByNameContainsIgnoreCaseAndIdIsNot(String name, Long existedCategoryId);
 }
