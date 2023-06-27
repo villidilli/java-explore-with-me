@@ -1,13 +1,20 @@
 package ru.practicum.event.dto;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.experimental.UtilityClass;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
+import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 @UtilityClass
 public class EventMapper {
@@ -61,4 +68,35 @@ public class EventMapper {
         dto.setViews(views);
         return dto;
     }
+
+    public Event patchEventFromDto(UpdateEventUserRequest updateDto, Optional<Category> category, Event existedEvent) {
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, String> updateMapWithNullFields = mapper.convertValue(updateDto, Map.class);
+        Map<String, String> existedMap = mapper.convertValue(existedEvent, Map.class);
+        Map<String, String> updateMapWithoutNull = new HashMap<>();
+        updateMapWithNullFields.entrySet().forEach(new Consumer<Map.Entry<String, String>>() {
+            @Override
+            public void accept(Map.Entry<String, String> entry) {
+                if (entry.getValue() != null)
+            }
+        });
+
+
+    }
 }
+
+//    private Long id;
+//    private String annotation;
+//    private Category category;
+//    private LocalDateTime createdOn;
+//    private String description;
+//    private LocalDateTime eventDate;
+//    private Float locationLat;
+//    private Float locationLon;
+//    private Boolean paid;
+//    private Integer participantLimit;
+//    private LocalDateTime publishedOn;
+//    private Boolean requestModeration;
+//    private EventState state;
+//    private String title;
+//    private User initiator;

@@ -47,6 +47,6 @@ public class PrivateController {
                                     @RequestBody UpdateEventUserRequest eventDto) {
         log.debug("/update event");
         log.debug("Income userId: {}, eventId: {}, eventDto: {}", userId, eventId, eventDto.toString());
-        return eventService.updateEvent(userId, eventId, eventDto);
+        return eventService.updateEventUser(userId, eventId, eventDto);
     }
 }

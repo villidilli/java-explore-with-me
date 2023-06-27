@@ -11,7 +11,7 @@ import java.util.List;
 public interface EventService {
     EventFullDto createEvent(Long userId, NewEventDto eventRequestDto);
 
-    EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequest eventDto);
+    EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest eventDto);
 
     List<EventFullDto> getEvents(Long[] users,
                                  EventState[] states,
@@ -20,4 +20,6 @@ public interface EventService {
                                  LocalDateTime rangeEnd,
                                  Integer from,
                                  Integer size);
+
+    EventFullDto updateEventAdmin(Long eventId, UpdateEventUserRequest eventDto);
 }
