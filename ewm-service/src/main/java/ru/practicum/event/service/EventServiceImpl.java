@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.model.Event;
@@ -63,19 +62,13 @@ public class EventServiceImpl implements EventService {
         log.debug("/update event admin");
         Event existedEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " not found"));
-        validateNewFieldValues(existedEvent, updateEventDto);
-
-//                .orElseThrow(() -> new NotFoundException("Category id=" + updateEventDto.getCategory() + " not found"));
-
-
-        Event updatedEvent = EventMapper.patchEventFromDto(  updateEventDto,
-                                        categoryRepository.findById(updateEventDto.getCategory()),
-                                        existedEvent.getInitiator());
-
-
-
-//        log.debug("Updated Event: {}", updatedEvent);
-//        return EventMapper.toDto(updatedEvent, 0 ,0); //TODO заменить нули реализацией
+        checkConstraintNewFields(existedEvent, updateEventDto);
+        Long newCategoryId = updateEventDto.getCategory();
+        Event updatedEvent = EventMapper.patchEventFromDto(
+                updateEventDto,
+                newCategoryId == null ? Optional.empty() : categoryRepository.findById(newCategoryId),
+                existedEvent);
+        return EventMapper.toDto(eventRepository.save(updatedEvent), 0, 0);
     }
 
     @Override
@@ -93,7 +86,7 @@ public class EventServiceImpl implements EventService {
                 .map(event -> EventMapper.toDto(event, 0, 0)).collect(Collectors.toList());
     }
 
-    private void validateNewFieldValues(Event existedEvent, UpdateEventUserRequest updateEventDto) {
+    private void checkConstraintNewFields(Event existedEvent, UpdateEventUserRequest updateEventDto) {
         LocalDateTime actualPublishedOn = existedEvent.getPublishedOn();
         if (actualPublishedOn != null && !updateEventDto.getEventDate().isAfter(actualPublishedOn.plusHours(1)))
             throw new ValidateException("Event date must be later then publication date on 1 hour");

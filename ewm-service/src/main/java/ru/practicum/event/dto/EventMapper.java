@@ -1,25 +1,34 @@
 package ru.practicum.event.dto;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
-import ru.practicum.user.model.User;
+import ru.practicum.utils.Constant;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @UtilityClass
+@Slf4j
 public class EventMapper {
 
     public Event toModel(NewEventDto dto) {
+        log.debug("/event dto to model");
         Event model = new Event();
         model.setAnnotation(dto.getAnnotation());
         Category category = new Category();
@@ -40,6 +49,7 @@ public class EventMapper {
     }
 
     public EventFullDto toDto(Event model, Integer confirmedRequests, Integer views) {
+        log.debug("/event to dto");
         EventFullDto dto = new EventFullDto();
         dto.setId(model.getId());
         dto.setAnnotation(model.getAnnotation());
@@ -70,33 +80,58 @@ public class EventMapper {
     }
 
     public Event patchEventFromDto(UpdateEventUserRequest updateDto, Optional<Category> category, Event existedEvent) {
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, String> updateMapWithNullFields = mapper.convertValue(updateDto, Map.class);
-        Map<String, String> existedMap = mapper.convertValue(existedEvent, Map.class);
-        Map<String, String> updateMapWithoutNull = new HashMap<>();
-        updateMapWithNullFields.entrySet().forEach(new Consumer<Map.Entry<String, String>>() {
-            @Override
-            public void accept(Map.Entry<String, String> entry) {
-                if (entry.getValue() != null)
-            }
-        });
+        log.debug("/patch event from dto");
+        ObjectMapper mapper = getPatchEventMapper();
+        Map<String, String > updateDtoMap = mapper.convertValue(updateDto, Map.class);
+        Map<String, String > existedEventMap = mapper.convertValue(existedEvent, Map.class);
+        Map<String, String > changedFields = updateDtoMap.entrySet().stream()
+                                        .filter(entry -> entry.getValue() != null
+                                                && !entry.getKey().equals("location")
+                                                && !entry.getKey().equals("category"))
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        String newStateAction = changedFields.get("stateAction");
+        if (newStateAction.equalsIgnoreCase(StateAction.PUBLISH_EVENT.name())) {
+            changedFields.put("state", EventState.PUBLISHED.name());
+            changedFields.remove("stateAction");
+        }
+        if (newStateAction.equalsIgnoreCase(StateAction.REJECT_EVENT.name())) {
+            changedFields.put("state", EventState.CANCELED.name());
+            changedFields.remove("stateAction");
+        }
 
 
+        existedEventMap.putAll(changedFields);
+        Event updatedEvent = mapper.convertValue(existedEventMap, Event.class);
+        if (updatedEvent.getState() == EventState.PUBLISHED) updatedEvent.setPublishedOn(LocalDateTime.now());
+        category.ifPresent(updatedEvent::setCategory);
+        Location newLocation = updateDto.getLocation();
+        if (newLocation != null) {
+            updatedEvent.setLocationLat(newLocation.getLat());
+            updatedEvent.setLocationLon(newLocation.getLon());
+        }
+        return updatedEvent;
+    }
+
+    private ObjectMapper getPatchEventMapper() {
+        log.debug("/get patch event mapper");
+        JavaTimeModule timeModule = new JavaTimeModule();
+        timeModule.addDeserializer(LocalDateTime.class,
+                new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(Constant.dateTimeFormat)));
+        return JsonMapper.builder()
+                .addModule(timeModule)
+                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .build();
     }
 }
 
-//    private Long id;
 //    private String annotation;
-//    private Category category;
-//    private LocalDateTime createdOn;
+//    private Long category;
 //    private String description;
 //    private LocalDateTime eventDate;
-//    private Float locationLat;
-//    private Float locationLon;
+//    private Location location;
 //    private Boolean paid;
 //    private Integer participantLimit;
-//    private LocalDateTime publishedOn;
 //    private Boolean requestModeration;
-//    private EventState state;
+//    private StateAction stateAction;
 //    private String title;
-//    private User initiator;

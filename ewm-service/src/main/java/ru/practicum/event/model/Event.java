@@ -1,5 +1,6 @@
 package ru.practicum.event.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.category.model.Category;
@@ -8,6 +9,7 @@ import ru.practicum.utils.Constant;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
