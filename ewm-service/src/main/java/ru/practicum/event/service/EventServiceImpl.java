@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-    private final ParticipationRequestRepository requestRepository;
     private final CategoryRepository categoryRepository;
 
     @Transactional
@@ -54,36 +53,31 @@ public class EventServiceImpl implements EventService {
     }
 
     @Transactional
-    @Override // TODO !!!!!!!!!!
-    public EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest eventDto) {
-        return null;
-    }
-
-    @Transactional
     @Override
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventUserRequest updateEventDto) {
         log.debug("/update event admin");
         Event existedEvent = getExistedEvent(eventId);
         checkPublishedOnConstraint(updateEventDto, existedEvent);
         checkStateActionConstraint(updateEventDto, existedEvent);
-        Long newCategoryId = updateEventDto.getCategory();
-        Event updatedEvent = EventMapper.patchMappingToModel(
-                updateEventDto,
-                newCategoryId == null ? Optional.empty() : categoryRepository.findById(newCategoryId),
-                existedEvent);
-        Event savedEvent = eventRepository.save(updatedEvent);//TODO удалить
-        Event savedEvent2 = eventRepository.findById(savedEvent.getId()).get();//TODO удалить
-        return EventMapper.toDto(updatedEvent, 0, 0); // TODO запросы / статистика
+
+        Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
+                                                             getCategoryForPatch(updateEventDto),
+                                                             existedEvent);
+        return EventMapper.toDto(updatedEvent, 0, 0); // TODO запросы / статистика реализовать
     }
 
+    // TODO !!!!!!!!!!
+    @Transactional
     @Override
-    public List<EventFullDto> getEvents(List<Long> users,
-                                        List<EventState> states,
-                                        List<Long> categories,
-                                        LocalDateTime rangeStart,
-                                        LocalDateTime rangeEnd,
-                                        Integer from,
-                                        Integer size) {
+    public EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest eventDto) {
+        return null;
+    }
+
+
+    @Override
+    public List<EventFullDto> getEvents(List<Long> users, List<EventState> states, List<Long> categories,
+                                        LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                        Integer from, Integer size) {
         log.debug("/get events");
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
         return eventRepository.getEvents(users, states, categories, rangeStart, rangeEnd, pageRequest).stream()
@@ -104,6 +98,11 @@ public class EventServiceImpl implements EventService {
             throw new ValidateException("Cannot publish event because it's not in the right state. Need: PENDING");
         if (newStateAction.equals(StateAction.REJECT_EVENT) && !actualState.equals(EventState.PUBLISHED))
             throw new ValidateException("Cannot rejected event because it's not in the right state. Need: PUBLISHED");
+    }
+
+    private Optional<Category> getCategoryForPatch(UpdateEventUserRequest updateEventDto) {
+        Long newCategoryId = updateEventDto.getCategory();
+        return newCategoryId == null ? Optional.empty() : categoryRepository.findById(newCategoryId);
     }
 
     private void checkEventDateConstraint(NewEventDto eventRequestDto) {

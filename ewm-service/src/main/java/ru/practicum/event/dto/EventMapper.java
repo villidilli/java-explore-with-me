@@ -101,7 +101,6 @@ public class EventMapper {
         existedEventMap.putAll(changedFields);
         Event updatedEvent = mapper.convertValue(existedEventMap, Event.class);
         if (updatedEvent.getState() == EventState.PUBLISHED) updatedEvent.setPublishedOn(LocalDateTime.now());
-        if (category != null) updatedEvent.setCategory(category);
         category.ifPresent(updatedEvent::setCategory);
         Location newLocation = updateDto.getLocation();
         if (newLocation != null) {
