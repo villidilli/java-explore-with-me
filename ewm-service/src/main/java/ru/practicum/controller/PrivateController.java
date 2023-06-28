@@ -23,7 +23,7 @@ public class PrivateController {
     private final EventService eventService;
     private final ParticipationRequestService requestService;
 
-    @PostMapping("/{userId}/requests")
+    @PostMapping("/{userId}/requests") //TODO WIP
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(@PathVariable Long userId,
                                                  @RequestParam Long eventId) {

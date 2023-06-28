@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.event.model.Event;
+import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
@@ -15,7 +16,6 @@ import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.repository.ParticipationRequestRepository;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
-import ru.practicum.event.model.EventState;
 
 import java.util.Objects;
 
@@ -32,6 +32,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     @Override
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
+        log.debug("/create request");
         ParticipationRequest savedRequest = requestRepository.save(requestValidate(userId, eventId));
         log.debug("Saved Request id: {}", savedRequest.getId());
         return ParticipationRequestMapper.toDto(savedRequest);
@@ -43,10 +44,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         Event existedEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id: " + eventId + " not found"));
 
-        ParticipationRequest existedRequest = requestRepository.countByRequester_IdIsAndEvent_IdIs(userId, eventId);
+        ParticipationRequest existedRequest = requestRepository.findByRequester_IdIsAndEvent_IdIs(userId, eventId);
         if (Objects.equals(existedEvent.getInitiator().getId(), userId))
                                     throw new ValidateException("Initiator can't create request for his event");
-        if (existedRequest == null) throw new ValidateException("Request already exist. Requester Id: " + userId +
+
+        if (existedRequest != null) throw new ValidateException("Request already exist. Requester Id: " + userId +
                                                                 " Event id: " + eventId +
                                                                  "Request id: " + existedRequest.getId());
         if (!existedEvent.getState().equals(EventState.PUBLISHED))

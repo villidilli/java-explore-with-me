@@ -8,35 +8,20 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query( "SELECT e " +
             "FROM Event AS e " +
-            "WHERE (:users is null OR e.initiator.id IN :users) " +
-                "AND (:states is null OR e.state IN :states) " +
-                "AND (:categories is null OR e.category IN :categories) " +
-                "AND ((:rangeStart is null OR :rangeEnd is null) OR e.eventDate BETWEEN :rangeStart AND :rangeEnd)"
+            "WHERE :users is null OR e.initiator.id IN :users " +
+                "AND :states is null OR e.state IN :states " +
+                "AND :categories is null OR e.category.id IN :categories " +
+                "AND e.eventDate BETWEEN COALESCE(:rangeStart, e.eventDate) AND COALESCE(:rangeEnd, e.eventDate)"
     )
-    Page<Event> getEvents(Long[] users,
-                          EventState[] states,
-                          Long[] categories,
+    Page<Event> getEvents(List<Long> users,
+                          List<EventState> states,
+                          List<Long> categories,
                           LocalDateTime rangeStart,
                           LocalDateTime rangeEnd,
                           PageRequest pageRequest);
 }
-
-//    private Long id;
-//    private String annotation;
-//    private Category category;
-//    private LocalDateTime createdOn;
-//    private String description;
-//    private LocalDateTime eventDate;
-//    private Float locationLat;
-//    private Float locationLon;
-//    private Boolean paid;
-//    private Integer participantLimit;
-//    private LocalDateTime publishedOn;
-//    private Boolean requestModeration;
-//    private EventState state;
-//    private String title;
-//    private User initiator;
