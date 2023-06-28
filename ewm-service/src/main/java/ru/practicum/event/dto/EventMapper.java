@@ -19,8 +19,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @UtilityClass
@@ -79,7 +77,7 @@ public class EventMapper {
         return dto;
     }
 
-    public Event patchEventFromDto(UpdateEventUserRequest updateDto, Optional<Category> category, Event existedEvent) {
+    public Event patchMappingToModel(UpdateEventUserRequest updateDto, Optional<Category> category, Event existedEvent) {
         log.debug("/patch event from dto");
         ObjectMapper mapper = getPatchEventMapper();
         Map<String, String > updateDtoMap = mapper.convertValue(updateDto, Map.class);
@@ -103,6 +101,7 @@ public class EventMapper {
         existedEventMap.putAll(changedFields);
         Event updatedEvent = mapper.convertValue(existedEventMap, Event.class);
         if (updatedEvent.getState() == EventState.PUBLISHED) updatedEvent.setPublishedOn(LocalDateTime.now());
+        if (category != null) updatedEvent.setCategory(category);
         category.ifPresent(updatedEvent::setCategory);
         Location newLocation = updateDto.getLocation();
         if (newLocation != null) {
