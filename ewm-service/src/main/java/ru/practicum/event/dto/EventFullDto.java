@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.event.model.Location;
+import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.utils.Constant;
 import ru.practicum.event.model.EventState;
 
@@ -36,13 +37,13 @@ public class EventFullDto {
     private Integer views;
 
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @ToString
-    public static class UserShortDto {
-        private Long id;
-        private String name;
-    }
+//    @Getter
+//    @Setter
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    @ToString
+//    public static class UserShortDto {
+//        private Long id;
+//        private String name;
+//    }
 }

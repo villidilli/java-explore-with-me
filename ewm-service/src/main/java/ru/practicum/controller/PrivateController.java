@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.service.EventService;
@@ -13,6 +14,7 @@ import ru.practicum.request.service.ParticipationRequestService;
 import ru.practicum.user.service.UserService;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -48,5 +50,12 @@ public class PrivateController {
         log.debug("/update event");
         log.debug("Income userId: {}, eventId: {}, eventDto: {}", userId, eventId, eventDto.toString());
         return eventService.updateEventUser(userId, eventId, eventDto);
+    }
+
+    @GetMapping("/{userId}/events")
+    public List<EventShortDto> getEventsByUser(@PathVariable Long userId,
+                                               @RequestParam(defaultValue = "0") Integer from,
+                                               @RequestParam(defaultValue = "10") Integer size) {
+        return eventService.getEventsByUser(userId, from, size);
     }
 }

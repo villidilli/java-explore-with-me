@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final ParticipationRequestRepository requestRepository;
     private final CategoryRepository categoryRepository;
 
     @Transactional
@@ -49,9 +50,17 @@ public class EventServiceImpl implements EventService {
         eventToSave.setCategory(existedCategory);
         Event savedEvent = eventRepository.save(eventToSave);
         log.debug("Saved Event id: {}", savedEvent.getId());
-        return EventMapper.toDto(savedEvent,0, 0);
+        return EventMapper.toFullDto(savedEvent,0, 0);
     }
 
+    // TODO !!!!!!!!!!
+    @Transactional
+    @Override
+    public EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest eventDto) {
+        return null;
+    }
+
+    // TODO запросы / статистика
     @Transactional
     @Override
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventUserRequest updateEventDto) {
@@ -63,25 +72,31 @@ public class EventServiceImpl implements EventService {
         Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
                                                              getCategoryForPatch(updateEventDto),
                                                              existedEvent);
-        return EventMapper.toDto(updatedEvent, 0, 0); // TODO запросы / статистика реализовать
+        return EventMapper.toFullDto(eventRepository.save(updatedEvent), 0, 0);
     }
 
-    // TODO !!!!!!!!!!
-    @Transactional
+    //TODO запросы / статистика
     @Override
-    public EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest eventDto) {
-        return null;
+    public List<EventShortDto> getEventsByUser(Long userId, Integer from, Integer size) {
+        getExistedUser(userId);
+        return eventRepository.findAllByInitiator_Id(userId, new PageConfig(from, size, Sort.unsorted())).stream()
+                .map(event -> EventMapper.toShortDto(event, 0, 0))
+                .collect(Collectors.toList());
     }
 
-
+    // TODO запросы / статистика
     @Override
-    public List<EventFullDto> getEvents(List<Long> users, List<EventState> states, List<Long> categories,
-                                        LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                        Integer from, Integer size) {
+    public List<EventFullDto> getEvents(List<Long> users,
+                                        List<EventState> states,
+                                        List<Long> categories,
+                                        LocalDateTime rangeStart,
+                                        LocalDateTime rangeEnd,
+                                        Integer from,
+                                        Integer size) {
         log.debug("/get events");
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
         return eventRepository.getEvents(users, states, categories, rangeStart, rangeEnd, pageRequest).stream()
-                .map(event -> EventMapper.toDto(event, 0, 0)) // TODO запросы / статистика
+                .map(event -> EventMapper.toFullDto(event, 0, 0))
                 .collect(Collectors.toList());
     }
 

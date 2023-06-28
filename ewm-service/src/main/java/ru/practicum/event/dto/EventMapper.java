@@ -1,11 +1,6 @@
 package ru.practicum.event.dto;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import ru.practicum.category.dto.CategoryDto;
@@ -13,10 +8,11 @@ import ru.practicum.category.model.Category;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
-import ru.practicum.utils.Constant;
+import ru.practicum.user.dto.UserShortDto;
+import ru.practicum.user.model.User;
+import ru.practicum.utils.ObjectMapperConfig;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -46,7 +42,7 @@ public class EventMapper {
         return model;
     }
 
-    public EventFullDto toDto(Event model, Integer confirmedRequests, Integer views) {
+    public EventFullDto toFullDto(Event model, Integer confirmedRequests, Integer views) {
         log.debug("/event to dto");
         EventFullDto dto = new EventFullDto();
         dto.setId(model.getId());
@@ -59,7 +55,7 @@ public class EventMapper {
         dto.setCreatedOn(model.getCreatedOn());
         dto.setDescription(model.getDescription());
         dto.setEventDate(model.getEventDate());
-        EventFullDto.UserShortDto userShortDto = new EventFullDto.UserShortDto();
+        UserShortDto userShortDto = new UserShortDto();
         userShortDto.setId(model.getInitiator().getId());
         userShortDto.setName(model.getInitiator().getName());
         dto.setInitiator(userShortDto);
@@ -79,7 +75,7 @@ public class EventMapper {
 
     public Event patchMappingToModel(UpdateEventUserRequest updateDto, Optional<Category> category, Event existedEvent) {
         log.debug("/patch event from dto");
-        ObjectMapper mapper = getPatchEventMapper();
+        ObjectMapper mapper = ObjectMapperConfig.getPatchMapperConfig();
         Map<String, String > updateDtoMap = mapper.convertValue(updateDto, Map.class);
         Map<String, String > existedEventMap = mapper.convertValue(existedEvent, Map.class);
         Map<String, String > changedFields = updateDtoMap.entrySet().stream()
@@ -96,8 +92,6 @@ public class EventMapper {
             changedFields.put("state", EventState.CANCELED.name());
             changedFields.remove("stateAction");
         }
-
-
         existedEventMap.putAll(changedFields);
         Event updatedEvent = mapper.convertValue(existedEventMap, Event.class);
         if (updatedEvent.getState() == EventState.PUBLISHED) updatedEvent.setPublishedOn(LocalDateTime.now());
@@ -110,26 +104,36 @@ public class EventMapper {
         return updatedEvent;
     }
 
-    private ObjectMapper getPatchEventMapper() {
-        log.debug("/get patch event mapper");
-        JavaTimeModule timeModule = new JavaTimeModule();
-        timeModule.addDeserializer(LocalDateTime.class,
-                new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(Constant.dateTimeFormat)));
-        return JsonMapper.builder()
-                .addModule(timeModule)
-                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .build();
+    public EventShortDto toShortDto(Event model, Integer confirmedRequests, Integer views) {
+        log.debug("/event to short dto");
+        EventShortDto dto = new EventShortDto();
+        dto.setId(model.getId());
+        dto.setAnnotation(model.getAnnotation());
+        dto.setConfirmedRequests(confirmedRequests);
+        dto.setPaid(model.getPaid());
+        dto.setViews(views);
+        dto.setTitle(model.getTitle());
+        dto.setEventDate(model.getEventDate());
+        UserShortDto userDto = new UserShortDto();
+        userDto.setId(model.getInitiator().getId());
+        userDto.setName(model.getInitiator().getName());
+        dto.setInitiator(userDto);
+        CategoryDto catDto = new CategoryDto();
+        catDto.setId(model.getCategory().getId());
+        catDto.setName(model.getCategory().getName());
+        dto.setCategory(catDto);
+        return dto;
     }
-}
 
-//    private String annotation;
-//    private Long category;
-//    private String description;
-//    private LocalDateTime eventDate;
-//    private Location location;
-//    private Boolean paid;
-//    private Integer participantLimit;
-//    private Boolean requestModeration;
-//    private StateAction stateAction;
-//    private String title;
+//    private ObjectMapper getPatchEventMapper() {
+//        log.debug("/get patch event mapper");
+//        JavaTimeModule timeModule = new JavaTimeModule();
+//        timeModule.addDeserializer(LocalDateTime.class,
+//                new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(Constant.dateTimeFormat)));
+//        return JsonMapper.builder()
+//                .addModule(timeModule)
+//                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+//                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+//                .build();
+//    }
+}
