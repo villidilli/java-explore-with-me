@@ -25,6 +25,7 @@ import ru.practicum.user.repository.UserRepository;
 import ru.practicum.utils.Constant;
 import ru.practicum.utils.PageConfig;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -92,18 +93,47 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public EventFullDto getEventById(Long eventId, HttpServletRequest request) {
+        log.debug("/get event by id");
+        Event existedEvent = getExistedEvent(eventId);
+        checkConstraintPublished(existedEvent);
+        Integer confirmedRequests = requestRepository.countAllByEvent_IdIs(eventId);
+        Integer views = getViews(eventId);
+        saveEndpointHit(Constant.mainAppName, request);
+        return EventMapper.toFullDto(existedEvent, confirmedRequests, views);
+    }
+
+    //TODO запросы / статистика WIP !!!
+    @Override
+    public List<EventShortDto> getEventsForPublic(String text,
+                                                  List<Category> categories,
+                                                  Boolean paid,
+                                                  LocalDateTime rangeStart,
+                                                  LocalDateTime rangeEnd,
+                                                  Boolean onlyAvailable,
+                                                  Integer size,
+                                                  HttpServletRequest request) {
+        log.debug("/get events for public");
+        if (rangeStart == null) LocalDateTime.now();
+        
+        checkConstraintPublished();
+
+    }
+
     // TODO запросы / статистика
     @Override
-    public List<EventFullDto> getEvents(List<Long> users,
-                                        List<EventState> states,
-                                        List<Long> categories,
-                                        LocalDateTime rangeStart,
-                                        LocalDateTime rangeEnd,
-                                        Integer from,
-                                        Integer size) {
-        log.debug("/get events");
+    public List<EventFullDto> getEventsForAdmin(List<Long> users,
+                                                List<EventState> states,
+                                                List<Long> categories,
+                                                LocalDateTime rangeStart,
+                                                LocalDateTime rangeEnd,
+                                                Integer from,
+                                                Integer size) {
+        log.debug("/get events for admin");
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
-        return eventRepository.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest).stream()
+        return eventRepository.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest)
+                .stream()
                 .map(event -> EventMapper.toFullDto(event, 0, 0))
                 .collect(Collectors.toList());
     }
@@ -159,5 +189,16 @@ public class EventServiceImpl implements EventService {
         log.debug("Response views: {}", responseViews.toString());
         if (responseViews.getStatusCode().is2xxSuccessful()) return responseViews.getBody().size();
         return 0;
+    }
+
+    private void checkConstraintPublished(Event existedEvent) {
+        EventState actualState = existedEvent.getState();
+        if (actualState != EventState.PUBLISHED) {
+            throw new ValidateException("Event with id=" + existedEvent.getId() + " not PUBLISHED");
+        }
+    }
+
+    private void saveEndpointHit(String appName, HttpServletRequest request) {
+        statsClient.saveEndpointHit(appName, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
     }
 }

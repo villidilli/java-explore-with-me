@@ -54,20 +54,21 @@ public class AdminController {
     }
 
     @GetMapping("/events")
-    public List<EventFullDto> getEvents(@RequestParam(required = false) List<Long> users,
-                                        @RequestParam(required = false) List<EventState> states,
-                                        @RequestParam(required = false) List<Long> categories,
-                                        @RequestParam(required = false)
-                                            @DateTimeFormat(pattern = Constant.dateTimeFormat) LocalDateTime rangeStart,
-                                        @RequestParam(required = false)
-                                            @DateTimeFormat(pattern = Constant.dateTimeFormat) LocalDateTime rangeEnd,
-                                        @RequestParam(defaultValue = "0") Integer from,
-                                        @RequestParam(defaultValue = "10") Integer size) {
+    public List<EventFullDto> getEventsForAdmin(
+                                    @RequestParam(required = false) List<Long> users,
+                                    @RequestParam(required = false) List<EventState> states,
+                                    @RequestParam(required = false) List<Long> categories,
+                                    @RequestParam(required = false) @DateTimeFormat(pattern = Constant.dateTimeFormat)
+                                        LocalDateTime rangeStart,
+                                    @RequestParam(required = false) @DateTimeFormat(pattern = Constant.dateTimeFormat)
+                                        LocalDateTime rangeEnd,
+                                    @RequestParam(defaultValue = "0") Integer from,
+                                    @RequestParam(defaultValue = "10") Integer size) {
         log.debug("/get events");
         log.debug(
         "Income parameters: users: {}, states: {}, categories: {}, rangeStart: {}, rangeEnd: {}, from: {}, size: {}",
         users, states, categories, rangeStart, rangeEnd, from, size);
-        return eventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
+        return eventService.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @DeleteMapping("/users/{userId}")
