@@ -4,20 +4,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.StatsServiceClient;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
+import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
+import ru.practicum.request.model.PapticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
+import ru.practicum.utils.Constant;
 import ru.practicum.utils.PageConfig;
 
 import java.time.Instant;
@@ -37,6 +42,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final ParticipationRequestRepository requestRepository;
     private final CategoryRepository categoryRepository;
+    private final StatsServiceClient statsClient;
 
     @Transactional
     @Override
@@ -72,7 +78,9 @@ public class EventServiceImpl implements EventService {
         Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
                                                              getCategoryForPatch(updateEventDto),
                                                              existedEvent);
-        return EventMapper.toFullDto(eventRepository.save(updatedEvent), 0, 0);
+        Integer confirmedRequests = requestRepository.countAllByStatusIs(PapticipationRequestState.APPROVED);
+        log.debug("Confirmed request: {}", confirmedRequests);
+        return EventMapper.toFullDto(eventRepository.save(updatedEvent), confirmedRequests, getViews(eventId));
     }
 
     //TODO запросы / статистика
@@ -95,7 +103,7 @@ public class EventServiceImpl implements EventService {
                                         Integer size) {
         log.debug("/get events");
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
-        return eventRepository.getEvents(users, states, categories, rangeStart, rangeEnd, pageRequest).stream()
+        return eventRepository.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest).stream()
                 .map(event -> EventMapper.toFullDto(event, 0, 0))
                 .collect(Collectors.toList());
     }
@@ -140,5 +148,16 @@ public class EventServiceImpl implements EventService {
     private Event getExistedEvent(Long eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " not found"));
+    }
+
+    private Integer getViews(Long eventId) {
+        log.debug("/get views");
+        ResponseEntity<List<ViewStatsDto>> responseViews = statsClient.getViewStats(Constant.unreachableStart,
+                Constant.unreachableEnd,
+                new String[]{"/events/" + eventId},
+                null);
+        log.debug("Response views: {}", responseViews.toString());
+        if (responseViews.getStatusCode().is2xxSuccessful()) return responseViews.getBody().size();
+        return 0;
     }
 }

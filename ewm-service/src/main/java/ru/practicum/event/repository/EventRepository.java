@@ -18,8 +18,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                 "AND :categories is null OR e.category.id IN :categories " +
                 "AND e.eventDate BETWEEN COALESCE(:rangeStart, e.eventDate) AND COALESCE(:rangeEnd, e.eventDate)"
     )
-    Page<Event> getEvents(List<Long> users, List<EventState> states, List<Long> categories,
-                          LocalDateTime rangeStart, LocalDateTime rangeEnd, PageRequest pageRequest);
+    Page<Event> getEventsForAdmin(List<Long> users, List<EventState> states, List<Long> categories,
+                                  LocalDateTime rangeStart, LocalDateTime rangeEnd, PageRequest pageRequest);
 
     Page<Event> findAllByInitiator_Id(Long initiatorId, PageRequest pageRequest);
 }

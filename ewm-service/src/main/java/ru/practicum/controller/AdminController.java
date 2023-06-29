@@ -17,6 +17,7 @@ import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.service.UserService;
 import ru.practicum.utils.Constant;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -87,9 +88,14 @@ public class AdminController {
 
     @PatchMapping("/events/{eventId}")
     public EventFullDto updateEvent(@PathVariable Long eventId,
-                                    @RequestBody UpdateEventUserRequest eventDto) {
+                                    @RequestBody UpdateEventUserRequest eventDto,
+                                    HttpServletRequest request) {
         log.debug("/updateEvent");
         log.debug("Income parameters: eventId: {}, eventDto: {}", eventId, eventDto.toString());
+        log.debug(request.getContextPath());
+        log.debug(request.getRequestURI());
+        log.debug(request.getRemoteUser());
+        log.debug(request.getRemoteAddr());
         return eventService.updateEventAdmin(eventId, eventDto);
     }
 
