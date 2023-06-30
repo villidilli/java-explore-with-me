@@ -2,6 +2,7 @@ package ru.practicum.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -18,11 +19,13 @@ import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
+import ru.practicum.request.model.CountEventRequests;
 import ru.practicum.request.model.PapticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 import ru.practicum.utils.Constant;
+import ru.practicum.utils.EventViewSort;
 import ru.practicum.utils.PageConfig;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,8 +33,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -104,32 +106,46 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toFullDto(existedEvent, confirmedRequests, views);
     }
 
-    //TODO запросы / статистика WIP !!!
+    //TODO onlyAvailable
+    @Transactional
     @Override
-    public List<EventShortDto> getEventsForPublic(String text,
-                                                  List<Category> categories,
-                                                  Boolean paid,
-                                                  LocalDateTime rangeStart,
-                                                  LocalDateTime rangeEnd,
-                                                  Boolean onlyAvailable,
-                                                  Integer size,
+    public List<EventShortDto> getEventsForPublic(String text, List<Long> categories, Boolean paid,
+                                                  LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                  EventViewSort sort, Boolean onlyAvailable, Integer from, Integer size,
                                                   HttpServletRequest request) {
         log.debug("/get events for public");
-        if (rangeStart == null) LocalDateTime.now();
-        
-        checkConstraintPublished();
+        Page<Event> searchedEvents = eventRepository.getEventsForPublic(
+                                    text, categories, paid, getStartTime(rangeStart), rangeEnd, EventState.PUBLISHED,
+                                    new PageConfig(from, size, Sort.unsorted()));
+        Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
+        Map<Long, Long> eventIdCountHits = getViews(searchedEvents);
 
+        List<EventShortDto> resultList = new ArrayList<>();
+        searchedEvents.stream().forEach(event -> {
+            int requestsToSave = 0;
+            int viewsToSave = 0;
+            if (eventIdConfirmedRequestsMap.containsKey(event.getId())) {
+                requestsToSave = eventIdConfirmedRequestsMap.get(event.getId()).intValue();
+            }
+            if (eventIdCountHits.containsKey(event.getId())) {
+                viewsToSave = eventIdCountHits.get(event.getId()).intValue();
+            }
+            resultList.add(EventMapper.toShortDto(event, requestsToSave, viewsToSave));
+        });
+
+        statsClient.saveEndpointHit(Constant.mainAppName, request.getRequestURI(),
+                                    request.getRemoteAddr(), LocalDateTime.now());
+
+        return resultList.stream()
+                .sorted(getSort(sort))
+                .collect(Collectors.toList());
     }
 
     // TODO запросы / статистика
     @Override
-    public List<EventFullDto> getEventsForAdmin(List<Long> users,
-                                                List<EventState> states,
-                                                List<Long> categories,
-                                                LocalDateTime rangeStart,
-                                                LocalDateTime rangeEnd,
-                                                Integer from,
-                                                Integer size) {
+    public List<EventFullDto> getEventsForAdmin(List<Long> users, List<EventState> states, List<Long> categories,
+                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from,
+                                                                                                    Integer size) {
         log.debug("/get events for admin");
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
         return eventRepository.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest)
@@ -200,5 +216,48 @@ public class EventServiceImpl implements EventService {
 
     private void saveEndpointHit(String appName, HttpServletRequest request) {
         statsClient.saveEndpointHit(appName, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
+    }
+
+    private Comparator<EventShortDto> getSort(EventViewSort sort) {
+        if (sort == EventViewSort.EVENT_DATE) return Comparator.comparing(EventShortDto::getEventDate);
+        return Comparator.comparing(EventShortDto::getViews);
+    }
+
+    private LocalDateTime getStartTime(LocalDateTime rangeStart) {
+        if (rangeStart == null) return LocalDateTime.now();
+        return rangeStart;
+    }
+
+    private Map<Long, Long> getConfirmedRequests(Page<Event> events) {
+        List<Long> searchedEventsIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+        //key - EventId, value - countConfirmedRequests
+        Map<Long, Long> confirmedRequestsMap =
+                requestRepository.getCountEventRequests(searchedEventsIds, PapticipationRequestState.APPROVED)
+                        .stream()
+                        .collect(Collectors.toMap(CountEventRequests::getEventId, CountEventRequests::getRequests));
+        return confirmedRequestsMap;
+    }
+
+    private Map<Long, Long> getViews(Page<Event> events) {
+        String[] searchedEventsUris = events.stream()
+                .map(event -> {
+                    return "/events/" + event.getId();
+                }).collect(Collectors.toList()).toArray(new String[0]);
+
+        ResponseEntity<List<ViewStatsDto>> views = statsClient.getViewStats(Constant.unreachableStart,
+                Constant.unreachableEnd,
+                searchedEventsUris,
+                false);
+        Map<Long, Long> eventIdViews = new HashMap<>();
+        views.getBody()
+                .forEach(viewStatsDto -> eventIdViews.put(uriToEventId(viewStatsDto.getUri()), viewStatsDto.getHits()));
+        return eventIdViews;
+    }
+
+    private Long uriToEventId(String uri) {
+        String[] uriParts = uri.split("/");
+        return Long.parseLong(uriParts[uriParts.length - 1]);
     }
 }

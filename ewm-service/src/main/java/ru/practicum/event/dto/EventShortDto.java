@@ -1,7 +1,7 @@
 package ru.practicum.event.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.utils.Constant;
@@ -24,7 +24,8 @@ public class EventShortDto {
     private CategoryDto category;
     private Integer confirmedRequests;
     @NotNull
-    @DateTimeFormat(pattern = Constant.dateTimeFormat)
+//    @DateTimeFormat(pattern = Constant.dateTimeFormat)
+    @JsonFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime eventDate;
     @NotNull
     private UserShortDto initiator;

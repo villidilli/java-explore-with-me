@@ -9,7 +9,6 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
 import ru.practicum.user.dto.UserShortDto;
-import ru.practicum.user.model.User;
 import ru.practicum.utils.ObjectMapperConfig;
 
 import java.time.LocalDateTime;

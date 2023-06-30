@@ -13,13 +13,46 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query( "SELECT e " +
             "FROM Event AS e " +
-            "WHERE :users is null OR e.initiator.id IN :users " +
-                "AND :states is null OR e.state IN :states " +
-                "AND :categories is null OR e.category.id IN :categories " +
+            "WHERE :users IS NULL OR e.initiator.id IN :users " +
+                "AND :states IS NULL OR e.state IN :states " +
+                "AND :categories IS NULL OR e.category.id IN :categories " +
                 "AND e.eventDate BETWEEN COALESCE(:rangeStart, e.eventDate) AND COALESCE(:rangeEnd, e.eventDate)"
     )
     Page<Event> getEventsForAdmin(List<Long> users, List<EventState> states, List<Long> categories,
                                   LocalDateTime rangeStart, LocalDateTime rangeEnd, PageRequest pageRequest);
 
     Page<Event> findAllByInitiator_Id(Long initiatorId, PageRequest pageRequest);
+
+//    @Query( "SELECT e " +
+//            "FROM Event AS e " +
+//            "WHERE :text IS NULL OR (e.annotation ILIKE :text OR e.description ILIKE :text) " +
+//                "AND :categories IS NULL OR e.category IN :categories " +
+//                "AND :paid IS NULL OR e.paid = :paid " +
+//                "AND e.eventDate BETWEEN COALESCE(:rangeStart, e.eventDate) AND COALESCE(:rangeEnd, e.eventDate) " +
+//                "AND NULLIF(:onlyAvailable, false) " +
+//                "AND e.state = 'PUBLISHED'")
+//    Page<Event> getEventsForPublic(String text,
+//                            List<Category> categories,
+//                            Boolean paid,
+//                            LocalDateTime rangeStart,
+//                            LocalDateTime rangeEnd,
+//                            Boolean onlyAvailable,
+//                            PageRequest request);
+
+    @Query( "SELECT e " +
+            "FROM Event AS e " +
+            "WHERE ((e.annotation IS NULL OR LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) " +
+                "OR (e.description IS NULL OR LOWER(e.description) LIKE LOWER(CONCAT('%', :text, '%')))) " +
+                "OR (e.title IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :text, '%')))) " +
+            "AND (:categories IS NULL OR e.category.id IN :categories) " +
+            "AND (:paid IS NULL OR e.paid = :paid) " +
+            "AND (e.eventDate BETWEEN COALESCE(:rangeStart, e.eventDate) AND COALESCE(:rangeEnd, e.eventDate)) " +
+            "AND (e.state = :state)")
+    Page<Event> getEventsForPublic(String text,
+                                   List<Long> categories,
+                                   Boolean paid,
+                                   LocalDateTime rangeStart,
+                                   LocalDateTime rangeEnd,
+                                   EventState state,
+                                   PageRequest request);
 }

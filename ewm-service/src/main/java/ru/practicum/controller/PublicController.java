@@ -3,9 +3,11 @@ package ru.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.category.dto.CategoryDto;
-import ru.practicum.category.model.Category;
 import ru.practicum.category.service.CategoryService;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
@@ -39,24 +41,23 @@ public class PublicController {
         return categoryService.getCategoryById(catId);
     }
 
-    //TODO WIP
     @GetMapping("/events")
     public List<EventShortDto> getAllEvents(
-                            @RequestParam String text,
-                            @RequestParam List<Category> categories,
-                            @RequestParam Boolean paid,
+                            @RequestParam(required = false) String text,
+                            @RequestParam(required = false) List<Long> categories,
+                            @RequestParam(required = false) Boolean paid,
                             @RequestParam(required = false)
                                     @DateTimeFormat(pattern = Constant.dateTimeFormat) LocalDateTime rangeStart,
                             @RequestParam(defaultValue = Constant.unreachableEnd)
                                     @DateTimeFormat(pattern = Constant.dateTimeFormat) LocalDateTime rangeEnd,
                             @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-                            @RequestParam EventViewSort sort,
+                            @RequestParam(required = false) EventViewSort sort,
                             @RequestParam(defaultValue = "0") Integer from,
                             @RequestParam(defaultValue = "10") Integer size,
                             HttpServletRequest request) {
         log.debug("/get all events");
-        return
-                eventService.getEventsForPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, size, request);
+        return eventService.getEventsForPublic(text, categories, paid, rangeStart, rangeEnd,
+                                                sort, onlyAvailable, from, size, request);
     }
 
     @GetMapping("/events/{id}")
