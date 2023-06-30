@@ -29,5 +29,5 @@ public class ParticipationRequest {
     @DateTimeFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime created;
     @Enumerated(EnumType.STRING)
-    private PapticipationRequestState status;
+    private ParticipationRequestState status;
 }

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ru.practicum.dto.ViewStatsDto;
+import ru.practicum.exception.ValidateException;
 import ru.practicum.model.EndpointHit;
 import ru.practicum.model.ModelToDtoMapper;
 import ru.practicum.model.ViewStats;
@@ -35,8 +36,8 @@ public class StatServiceImpl implements StatService {
     @Override
     public List<ViewStatsDto> getViewStats(LocalDateTime start, LocalDateTime end, String[] uris, Boolean unique) {
         log.debug("/getViewStats");
+        checkConstraintStartEnd(start, end);
         List<ViewStats> resultFromRepo;
-
         if (uris == null) {
             if (unique) {
                 log.debug("/getStatsIpUnique, uris = null");
@@ -58,5 +59,9 @@ public class StatServiceImpl implements StatService {
         return resultFromRepo.stream()
                 .map(ModelToDtoMapper::toViewStatsDto)
                 .collect(Collectors.toList());
+    }
+
+    private void checkConstraintStartEnd(LocalDateTime start, LocalDateTime end) {
+        if (end.isBefore(start)) throw new ValidateException("EndTime must not be early StartTime");
     }
 }

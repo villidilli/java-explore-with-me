@@ -14,8 +14,6 @@ import java.util.List;
 public interface EventService {
     EventFullDto createEvent(Long userId, NewEventDto eventRequestDto);
 
-    EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest eventDto);
-
     List<EventFullDto> getEventsForAdmin(List<Long> users,
                                          List<EventState> states,
                                          List<Long> categories,

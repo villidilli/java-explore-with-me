@@ -2,7 +2,6 @@ package ru.practicum.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +16,11 @@ import ru.practicum.event.dto.*;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.exception.FieldConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
 import ru.practicum.request.model.CountEventRequests;
-import ru.practicum.request.model.PapticipationRequestState;
+import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
@@ -62,51 +62,43 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toFullDto(savedEvent,0, 0);
     }
 
-    // TODO !!!!!!!!!!
-    @Transactional
-    @Override
-    public EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest eventDto) {
-        return null;
-    }
-
-    // TODO запросы / статистика
     @Transactional
     @Override
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventUserRequest updateEventDto) {
         log.debug("/update event admin");
         Event existedEvent = getExistedEvent(eventId);
-        checkPublishedOnConstraint(updateEventDto, existedEvent);
         checkStateActionConstraint(updateEventDto, existedEvent);
-
+        checkPublishedOnConstraint(updateEventDto, existedEvent);
         Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
                                                              getCategoryForPatch(updateEventDto),
                                                              existedEvent);
-        Integer confirmedRequests = requestRepository.countAllByStatusIs(PapticipationRequestState.APPROVED);
+        Integer confirmedRequests = requestRepository.countAllByStatusIs(ParticipationRequestState.APPROVED);
         log.debug("Confirmed request: {}", confirmedRequests);
-        return EventMapper.toFullDto(eventRepository.save(updatedEvent), confirmedRequests, getViews(eventId));
+        Event savedEvent = eventRepository.save(updatedEvent);
+        return EventMapper.toFullDto(savedEvent, confirmedRequests, getCountViews(eventId));
     }
 
-    //TODO запросы / статистика
     @Override
     public List<EventShortDto> getEventsByUser(Long userId, Integer from, Integer size) {
         getExistedUser(userId);
-        return eventRepository.findAllByInitiator_Id(userId, new PageConfig(from, size, Sort.unsorted())).stream()
-                .map(event -> EventMapper.toShortDto(event, 0, 0))
+        List<Event> searchedEvents = eventRepository.findAllByInitiator_Id(userId, new PageConfig(from, size, Sort.unsorted())).stream()
                 .collect(Collectors.toList());
+        Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
+        Map<Long, Long> eventIdCountHits = getViews(searchedEvents);
+        return setRequestsAndViewsShortDto(searchedEvents, eventIdConfirmedRequestsMap, eventIdCountHits);
     }
 
     @Override
     public EventFullDto getEventById(Long eventId, HttpServletRequest request) {
         log.debug("/get event by id");
         Event existedEvent = getExistedEvent(eventId);
-        checkConstraintPublished(existedEvent);
+        checkConstraintNotPublished(existedEvent);
         Integer confirmedRequests = requestRepository.countAllByEvent_IdIs(eventId);
-        Integer views = getViews(eventId);
+        Integer views = getCountViews(eventId);
         saveEndpointHit(Constant.mainAppName, request);
         return EventMapper.toFullDto(existedEvent, confirmedRequests, views);
     }
 
-    //TODO onlyAvailable
     @Transactional
     @Override
     public List<EventShortDto> getEventsForPublic(String text, List<Long> categories, Boolean paid,
@@ -114,44 +106,49 @@ public class EventServiceImpl implements EventService {
                                                   EventViewSort sort, Boolean onlyAvailable, Integer from, Integer size,
                                                   HttpServletRequest request) {
         log.debug("/get events for public");
-        Page<Event> searchedEvents = eventRepository.getEventsForPublic(
+        checkConstraintStartEndRange(getStartTime(rangeStart), rangeEnd);
+        List<Event> searchedEvents = eventRepository.getEventsForPublic(
                                     text, categories, paid, getStartTime(rangeStart), rangeEnd, EventState.PUBLISHED,
-                                    new PageConfig(from, size, Sort.unsorted()));
+                                    new PageConfig(from, size, Sort.unsorted())).stream().collect(Collectors.toList());
         Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
+        checkOnlyAvailableParam(onlyAvailable, searchedEvents, eventIdConfirmedRequestsMap);
         Map<Long, Long> eventIdCountHits = getViews(searchedEvents);
-
-        List<EventShortDto> resultList = new ArrayList<>();
-        searchedEvents.stream().forEach(event -> {
-            int requestsToSave = 0;
-            int viewsToSave = 0;
-            if (eventIdConfirmedRequestsMap.containsKey(event.getId())) {
-                requestsToSave = eventIdConfirmedRequestsMap.get(event.getId()).intValue();
-            }
-            if (eventIdCountHits.containsKey(event.getId())) {
-                viewsToSave = eventIdCountHits.get(event.getId()).intValue();
-            }
-            resultList.add(EventMapper.toShortDto(event, requestsToSave, viewsToSave));
-        });
+        List<EventShortDto> resultList =
+                setRequestsAndViewsShortDto(searchedEvents, eventIdConfirmedRequestsMap, eventIdCountHits);
 
         statsClient.saveEndpointHit(Constant.mainAppName, request.getRequestURI(),
                                     request.getRemoteAddr(), LocalDateTime.now());
-
         return resultList.stream()
                 .sorted(getSort(sort))
                 .collect(Collectors.toList());
     }
 
-    // TODO запросы / статистика
     @Override
     public List<EventFullDto> getEventsForAdmin(List<Long> users, List<EventState> states, List<Long> categories,
                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from,
                                                                                                     Integer size) {
         log.debug("/get events for admin");
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
-        return eventRepository.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest)
-                .stream()
-                .map(event -> EventMapper.toFullDto(event, 0, 0))
-                .collect(Collectors.toList());
+        List<Event> searchedEvents =
+                eventRepository.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest)
+                .stream().collect(Collectors.toList());
+        Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
+        Map<Long, Long> eventIdCountHits = getViews(searchedEvents);
+        return setRequestsAndViewsFullDto(searchedEvents, eventIdConfirmedRequestsMap, eventIdCountHits);
+    }
+
+    private void checkOnlyAvailableParam(Boolean onlyAvailable, List<Event> searchedEvents,
+                                         Map<Long, Long> eventIdConfirmedRequestsMap) {
+        if (onlyAvailable) {
+            searchedEvents.iterator().forEachRemaining(event -> {
+                Long confirmedRequests = eventIdConfirmedRequestsMap.get(event.getId());
+                if (confirmedRequests >= event.getParticipantLimit()) searchedEvents.remove(event);
+            });
+        }
+    }
+
+    private void checkConstraintStartEndRange(LocalDateTime startTime, LocalDateTime rangeEnd) {
+        if (startTime.isAfter(rangeEnd)) throw new ValidateException("EndTime must be after StartTime");
     }
 
     private void checkPublishedOnConstraint(UpdateEventUserRequest updateEventDto, Event existedEvent) {
@@ -163,10 +160,18 @@ public class EventServiceImpl implements EventService {
     private void checkStateActionConstraint(UpdateEventUserRequest updateEventDto, Event existedEvent) {
         StateAction newStateAction = updateEventDto.getStateAction();
         EventState actualState = existedEvent.getState();
-        if (newStateAction.equals(StateAction.PUBLISH_EVENT) && !actualState.equals(EventState.PENDING))
+        if (newStateAction.equals(StateAction.PUBLISH_EVENT) && actualState.equals(EventState.PUBLISHED)) {
+            throw new FieldConflictException("Event already PUBLISHED");
+        }
+        if (newStateAction.equals(StateAction.PUBLISH_EVENT) && actualState.equals(EventState.CANCELED)) {
+            throw new FieldConflictException("Cannot publish event because it's already CANCELED");
+        }
+        if (newStateAction.equals(StateAction.PUBLISH_EVENT) && !actualState.equals(EventState.PENDING)) {
             throw new ValidateException("Cannot publish event because it's not in the right state. Need: PENDING");
-        if (newStateAction.equals(StateAction.REJECT_EVENT) && !actualState.equals(EventState.PUBLISHED))
-            throw new ValidateException("Cannot rejected event because it's not in the right state. Need: PUBLISHED");
+        }
+        if (newStateAction.equals(StateAction.REJECT_EVENT) && actualState.equals(EventState.PUBLISHED)) {
+            throw new ValidateException("Cannot rejected event because it's not in the right state.");
+        }
     }
 
     private Optional<Category> getCategoryForPatch(UpdateEventUserRequest updateEventDto) {
@@ -196,7 +201,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " not found"));
     }
 
-    private Integer getViews(Long eventId) {
+    private Integer getCountViews(Long eventId) {
         log.debug("/get views");
         ResponseEntity<List<ViewStatsDto>> responseViews = statsClient.getViewStats(Constant.unreachableStart,
                 Constant.unreachableEnd,
@@ -207,10 +212,10 @@ public class EventServiceImpl implements EventService {
         return 0;
     }
 
-    private void checkConstraintPublished(Event existedEvent) {
+    private void checkConstraintNotPublished(Event existedEvent) {
         EventState actualState = existedEvent.getState();
         if (actualState != EventState.PUBLISHED) {
-            throw new ValidateException("Event with id=" + existedEvent.getId() + " not PUBLISHED");
+            throw new NotFoundException("Event with id=" + existedEvent.getId() + " not PUBLISHED");
         }
     }
 
@@ -228,19 +233,20 @@ public class EventServiceImpl implements EventService {
         return rangeStart;
     }
 
-    private Map<Long, Long> getConfirmedRequests(Page<Event> events) {
+    private Map<Long, Long> getConfirmedRequests(List<Event> events) {
+        //key - event id , value = count approved requests
         List<Long> searchedEventsIds = events.stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
         //key - EventId, value - countConfirmedRequests
         Map<Long, Long> confirmedRequestsMap =
-                requestRepository.getCountEventRequests(searchedEventsIds, PapticipationRequestState.APPROVED)
+                requestRepository.getCountEventRequests(searchedEventsIds, ParticipationRequestState.APPROVED)
                         .stream()
                         .collect(Collectors.toMap(CountEventRequests::getEventId, CountEventRequests::getRequests));
         return confirmedRequestsMap;
     }
 
-    private Map<Long, Long> getViews(Page<Event> events) {
+    private Map<Long, Long> getViews(List<Event> events) {
         String[] searchedEventsUris = events.stream()
                 .map(event -> {
                     return "/events/" + event.getId();
@@ -260,4 +266,38 @@ public class EventServiceImpl implements EventService {
         String[] uriParts = uri.split("/");
         return Long.parseLong(uriParts[uriParts.length - 1]);
     }
+
+    private List<EventShortDto> setRequestsAndViewsShortDto(List<Event> searchedEvents, Map<Long, Long> requests,
+                                                            Map<Long, Long> views) {
+        List<EventShortDto> resultList = new ArrayList<>();
+        searchedEvents.stream().forEach(event -> {
+            int requestsToSave = 0;
+            int viewsToSave = 0;
+            if (requests.containsKey(event.getId())) {
+                requestsToSave = requests.get(event.getId()).intValue();
+            }
+            if (views.containsKey(event.getId())) {
+                viewsToSave = views.get(event.getId()).intValue();
+            }
+            resultList.add(EventMapper.toShortDto(event, requestsToSave, viewsToSave));
+        });
+        return resultList;
+    }
+
+    private List<EventFullDto> setRequestsAndViewsFullDto(List<Event> searchedEvents, Map<Long, Long> requests,
+                                                          Map<Long, Long> views) {
+            List<EventFullDto> resultList = new ArrayList<>();
+            searchedEvents.stream().forEach(event -> {
+                int requestsToSave = 0;
+                int viewsToSave = 0;
+                if (requests.containsKey(event.getId())) {
+                    requestsToSave = requests.get(event.getId()).intValue();
+                }
+                if (views.containsKey(event.getId())) {
+                    viewsToSave = views.get(event.getId()).intValue();
+                }
+                resultList.add(EventMapper.toFullDto(event, requestsToSave, viewsToSave));
+            });
+            return resultList;
+        }
 }

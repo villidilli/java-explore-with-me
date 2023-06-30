@@ -31,19 +31,7 @@ public class AdminController {
     private final CategoryService categoryService;
     private final EventService eventService;
 
-    @PostMapping("/users")
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserDto createUser(@Valid @RequestBody NewUserRequest userRequestDto) {
-        log.debug("UserDto to create: {}", userRequestDto.toString());
-        return adminService.createUser(userRequestDto);
-    }
-
-    @PostMapping("/categories")
-    @ResponseStatus(HttpStatus.CREATED)
-    public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto categoryRequestDto) {
-        log.debug("CategoryDto to create: {}", categoryRequestDto.toString());
-        return categoryService.createCategory(categoryRequestDto);
-    }
+    // USERS --->
 
     @GetMapping("/users")
     public List<UserDto> getAllUsers(@RequestParam(required = false) Long[] ids,
@@ -52,6 +40,48 @@ public class AdminController {
         log.debug("/Income parameters: userIds = {}, from = {}, size = {}", ids, from, size);
         return adminService.getAllUsers(ids, from, size);
     }
+
+    @PostMapping("/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto createUser(@Valid @RequestBody NewUserRequest userRequestDto) {
+        log.debug("UserDto to create: {}", userRequestDto.toString());
+        return adminService.createUser(userRequestDto);
+    }
+
+    @DeleteMapping("/users/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long userId) {
+        log.debug("/delete user");
+        log.debug("Запрошено удаление user с id: {}", userId);
+        adminService.deleteUser(userId);
+    }
+
+    // CATEGORIES --->
+
+    @PostMapping("/categories")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto categoryRequestDto) {
+        log.debug("CategoryDto to create: {}", categoryRequestDto.toString());
+        return categoryService.createCategory(categoryRequestDto);
+    }
+
+    @DeleteMapping("/categories/{catId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCategory(@PathVariable Long catId) {
+        log.debug("/delete category");
+        log.debug("Income parameters: catId: {}", catId);
+        categoryService.deleteCategory(catId);
+    }
+
+    @PatchMapping("/categories/{catId}")
+    public CategoryDto updateCategory(@PathVariable Long catId,
+                                      @Valid @RequestBody NewCategoryDto categoryRequestDto) {
+        log.debug("/update category");
+        log.debug("Income parameters: catId: {}, body: {}", catId, categoryRequestDto.toString());
+        return categoryService.updateCategory(catId, categoryRequestDto);
+    }
+
+    // EVENTS --->
 
     @GetMapping("/events")
     public List<EventFullDto> getEventsForAdmin(
@@ -71,22 +101,6 @@ public class AdminController {
         return eventService.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
-    @DeleteMapping("/users/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable Long userId) {
-        log.debug("/delete user");
-        log.debug("Запрошено удаление user с id: {}", userId);
-        adminService.deleteUser(userId);
-    }
-
-    @PatchMapping("/categories/{catId}")
-    public CategoryDto updateCategory(@PathVariable Long catId,
-                                      @Valid @RequestBody NewCategoryDto categoryRequestDto) {
-        log.debug("/update category");
-        log.debug("Income parameters: catId: {}, body: {}", catId, categoryRequestDto.toString());
-        return categoryService.updateCategory(catId, categoryRequestDto);
-    }
-
     @PatchMapping("/events/{eventId}")
     public EventFullDto updateEvent(@PathVariable Long eventId,
                                     @RequestBody UpdateEventUserRequest eventDto,
@@ -100,11 +114,5 @@ public class AdminController {
         return eventService.updateEventAdmin(eventId, eventDto);
     }
 
-    @DeleteMapping("/categories/{catId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable Long catId) {
-        log.debug("/delete category");
-        log.debug("Income parameters: catId: {}", catId);
-        categoryService.deleteCategory(catId);
-    }
+
 }

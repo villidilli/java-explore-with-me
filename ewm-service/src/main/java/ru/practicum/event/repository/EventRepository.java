@@ -55,4 +55,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                    LocalDateTime rangeEnd,
                                    EventState state,
                                    PageRequest request);
+
+    List<Event> findAllByCategory_Id(Long catId);
 }

@@ -25,7 +25,7 @@ public class PrivateController {
     private final EventService eventService;
     private final ParticipationRequestService requestService;
 
-    @PostMapping("/{userId}/requests") //TODO WIP
+    @PostMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(@PathVariable Long userId,
                                                  @RequestParam Long eventId) {
@@ -43,14 +43,16 @@ public class PrivateController {
         return eventService.createEvent(userId, eventRequestDto);
     }
 
-    @PatchMapping("/{userId}/events/{eventId}")
-    public EventFullDto updateEvent(@PathVariable Long userId,
-                                    @PathVariable Long eventId,
-                                    @RequestBody UpdateEventUserRequest eventDto) {
-        log.debug("/update event");
-        log.debug("Income userId: {}, eventId: {}, eventDto: {}", userId, eventId, eventDto.toString());
-        return eventService.updateEventUser(userId, eventId, eventDto);
-    }
+    //TODO WIP
+//    @PatchMapping("/{userId}/events/{eventId}")
+//    public EventFullDto updateEvent(@PathVariable Long userId,
+//                                    @PathVariable Long eventId,
+//                                    @RequestBody UpdateEventUserRequest eventDto) {
+//        log.debug("/update event");
+//        log.debug("Income userId: {}, eventId: {}, eventDto: {}", userId, eventId, eventDto.toString());
+////        return eventService.updateEventUser(userId, eventId, eventDto);
+//        return null;
+//    }
 
     @GetMapping("/{userId}/events")
     public List<EventShortDto> getEventsByUser(@PathVariable Long userId,

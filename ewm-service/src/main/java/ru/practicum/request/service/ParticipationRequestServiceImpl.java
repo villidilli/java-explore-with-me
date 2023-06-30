@@ -12,7 +12,7 @@ import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.dto.ParticipationRequestMapper;
-import ru.practicum.request.model.PapticipationRequestState;
+import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.repository.ParticipationRequestRepository;
 import ru.practicum.user.model.User;
@@ -34,35 +34,63 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Override
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         log.debug("/create request");
-        ParticipationRequest validatedRequestTosave = requestValidate(userId, eventId);
-        ParticipationRequest savedRequest = requestRepository.save(validatedRequestTosave);
+        User existedUser = getExistedUser(userId);
+        Event existedEvent = getExistedEvent(eventId);
+        ParticipationRequest validatedRequest = getValidatedRequest(existedUser, existedEvent);
+        ParticipationRequest savedRequest = requestRepository.save(validatedRequest);
         log.debug("Saved Request id: {}", savedRequest.getId());
         return ParticipationRequestMapper.toDto(savedRequest);
     }
 
-    private ParticipationRequest requestValidate(Long userId, Long eventId) {
-        User existedUser = userRepository.findById(userId)
+    private ParticipationRequest getValidatedRequest(User existedUser, Event existedEvent) {
+        ParticipationRequest existedRequest =
+                requestRepository.findByRequester_IdIsAndEvent_IdIs(existedUser.getId(), existedEvent.getId());
+        checkConstraintInitiatorRequesterEquals(existedUser, existedEvent);
+        checkConstraintRequestExisted(existedRequest);
+        checkConstraintPublished(existedEvent);
+        ParticipationRequest mappedRequest = ParticipationRequestMapper.toModel(existedUser, existedEvent);
+        checkConstraintParticipationLimit(existedEvent, mappedRequest);
+        checkConstraintRequestModeration(existedEvent, mappedRequest);
+        return mappedRequest;
+    }
+
+    private User getExistedUser(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id: " + userId + " not found"));
-        Event existedEvent = eventRepository.findById(eventId)
+    }
+
+    private Event getExistedEvent(Long eventId) {
+        return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id: " + eventId + " not found"));
+    }
 
-        ParticipationRequest existedRequest = requestRepository.findByRequester_IdIsAndEvent_IdIs(userId, eventId);
-        if (Objects.equals(existedEvent.getInitiator().getId(), userId))
-                                    throw new ValidateException("Initiator can't create request for his event");
+    private void checkConstraintInitiatorRequesterEquals(User existedUser, Event existedEvent) {
+        if (Objects.equals(existedEvent.getInitiator().getId(), existedUser.getId()))
+            throw new ValidateException("Initiator can't create request for his event");
+    }
 
-        if (existedRequest != null) throw new ValidateException("Request already exist. Requester Id: " + userId +
-                                                                " Event id: " + eventId +
-                                                                 "Request id: " + existedRequest.getId());
+    private void checkConstraintRequestExisted(ParticipationRequest existedRequest) {
+        if (existedRequest != null) throw new ValidateException("Request already exist");
+    }
+
+    private void checkConstraintPublished(Event existedEvent) {
         if (!existedEvent.getState().equals(EventState.PUBLISHED))
-                                    throw new ValidateException("Event id: " + eventId + " not published");
-        if (Objects.equals(existedEvent.getParticipantLimit(), requestRepository.countAllByEvent_IdIs(eventId)))
-            throw new ValidateException("Reached the limit request . Limit: " + existedEvent.getParticipantLimit());
+            throw new ValidateException("Event not published");
+    }
 
-        ParticipationRequest requestToSave = ParticipationRequestMapper.toModel(existedUser, existedEvent);
-
-        if (existedEvent.getRequestModeration() == Boolean.FALSE) {
-            requestToSave.setStatus(PapticipationRequestState.APPROVED);
+    private void checkConstraintParticipationLimit(Event event, ParticipationRequest request) {
+        if (event.getParticipantLimit() != 0) {
+            if (Objects.equals(event.getParticipantLimit(), requestRepository.countAllByEvent_IdIs(event.getId()))) {
+                throw new ValidateException("Reached the limit request . Limit: " + event.getParticipantLimit());
+            }
+        } else { // todo тут приходит NULL
+            request.setStatus(ParticipationRequestState.CONFIRMED);
         }
-        return requestToSave;
+    }
+
+    private void checkConstraintRequestModeration(Event existedEvent, ParticipationRequest request) {
+        if (existedEvent.getRequestModeration() == Boolean.FALSE) {
+            request.setStatus(ParticipationRequestState.CONFIRMED);
+        }
     }
 }
