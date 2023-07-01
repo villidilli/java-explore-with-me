@@ -170,7 +170,7 @@ public class EventServiceImpl implements EventService {
             throw new ValidateException("Cannot publish event because it's not in the right state. Need: PENDING");
         }
         if (newStateAction.equals(StateAction.REJECT_EVENT) && actualState.equals(EventState.PUBLISHED)) {
-            throw new ValidateException("Cannot rejected event because it's not in the right state.");
+            throw new FieldConflictException("Cannot rejected event because it's not in the right state.");
         }
     }
 
