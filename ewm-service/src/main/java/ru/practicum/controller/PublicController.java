@@ -56,7 +56,7 @@ public class PublicController {
                             @RequestParam(defaultValue = "10") Integer size,
                             HttpServletRequest request) {
         log.debug("/get all events");
-        return eventService.getEventsForPublic(text, categories, paid, rangeStart, rangeEnd,
+        return eventService.publicSearchEvents(text, categories, paid, rangeStart, rangeEnd,
                                                 sort, onlyAvailable, from, size, request);
     }
 

@@ -84,7 +84,7 @@ public class AdminController {
     // EVENTS --->
 
     @GetMapping("/events")
-    public List<EventFullDto> getEventsForAdmin(
+    public List<EventFullDto> searchEvents(
                                     @RequestParam(required = false) List<Long> users,
                                     @RequestParam(required = false) List<EventState> states,
                                     @RequestParam(required = false) List<Long> categories,
@@ -95,24 +95,17 @@ public class AdminController {
                                     @RequestParam(defaultValue = "0") Integer from,
                                     @RequestParam(defaultValue = "10") Integer size) {
         log.debug("/get events");
-        log.debug(
-        "Income parameters: users: {}, states: {}, categories: {}, rangeStart: {}, rangeEnd: {}, from: {}, size: {}",
-        users, states, categories, rangeStart, rangeEnd, from, size);
-        return eventService.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+        log.debug("Income: users: {}, states: {}, categories: {}, rangeStart: {}, rangeEnd: {}, from: {}, size: {}",
+                                                        users, states, categories, rangeStart, rangeEnd, from, size);
+        return eventService.searchEventsAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PatchMapping("/events/{eventId}")
     public EventFullDto updateEvent(@PathVariable Long eventId,
-                                    @RequestBody UpdateEventUserRequest eventDto,
+                                    @Valid @RequestBody UpdateEventUserRequest eventDto,
                                     HttpServletRequest request) {
         log.debug("/updateEvent");
         log.debug("Income parameters: eventId: {}, eventDto: {}", eventId, eventDto.toString());
-        log.debug(request.getContextPath());
-        log.debug(request.getRequestURI());
-        log.debug(request.getRemoteUser());
-        log.debug(request.getRemoteAddr());
         return eventService.updateEventAdmin(eventId, eventDto);
     }
-
-
 }

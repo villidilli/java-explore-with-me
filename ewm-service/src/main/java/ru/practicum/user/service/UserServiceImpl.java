@@ -46,7 +46,6 @@ public class UserServiceImpl implements UserService {
                     .map(UserMapper::toDto)
                     .collect(Collectors.toList());
         }
-
         return userRepository.findAllByIdIn(ids, new PageConfig(from, size, Sort.unsorted())).stream()
                 .map(UserMapper::toDto)
                 .collect(Collectors.toList());

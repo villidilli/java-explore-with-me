@@ -10,15 +10,19 @@ import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
+import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.dto.ParticipationRequestMapper;
-import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.model.ParticipationRequest;
+import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -42,6 +46,61 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         return ParticipationRequestMapper.toDto(savedRequest);
     }
 
+    @Override
+    public List<ParticipationRequestDto> getRequestsByUser(Long userId) {
+        log.debug("/get requests by user");
+        getExistedUser(userId);
+        return requestRepository.findAllByRequester_Id(userId).stream()
+                .map(ParticipationRequestMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ParticipationRequestDto> getRequestsByUserAndEvent(Long userId, Long eventId) {
+        log.debug("/get requests by event and user");
+        getExistedUser(userId);
+        getExistedEvent(eventId);
+        return requestRepository.findAllByEvent_Id(eventId).stream()
+                .map(ParticipationRequestMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Override
+    public ParticipationRequestDto cancelOwnRequest(Long userId, Long requestId) {
+        log.debug("/cancel from own request");
+        getExistedUser(userId);
+        ParticipationRequest request = getExistedRequest(requestId);
+        request.setStatus(ParticipationRequestState.CANCELED);
+        requestRepository.save(request);
+        return ParticipationRequestMapper.toDto(request);
+    }
+
+    @Transactional
+    @Override
+    public EventRequestStatusUpdateResult changeRequestsStatus(Long userId, Long eventId,
+                                                               EventRequestStatusUpdateRequest requestDto) {
+        log.debug("/change event requests status");
+        getExistedUser(userId);
+        getExistedEvent(eventId);
+        List<ParticipationRequest> existedRequests = requestRepository.findAllById(requestDto.getRequestIds());
+        existedRequests.forEach(request -> request.setStatus(requestDto.getStatus()));
+        requestRepository.saveAll(existedRequests);
+        EventRequestStatusUpdateResult result = new EventRequestStatusUpdateResult();
+        switch (requestDto.getStatus()) {
+            case CONFIRMED:
+                result.getConfirmedRequests().addAll(existedRequests.stream()
+                                                                    .map(ParticipationRequestMapper::toDto)
+                                                                    .collect(Collectors.toList()));
+                break;
+            case REJECTED:
+                result.getRejectedRequests().addAll(existedRequests.stream()
+                                                                    .map(ParticipationRequestMapper::toDto)
+                                                                    .collect(Collectors.toList()));
+        }
+        return result;
+    }
+
     private ParticipationRequest getValidatedRequest(User existedUser, Event existedEvent) {
         ParticipationRequest existedRequest =
                 requestRepository.findByRequester_IdIsAndEvent_IdIs(existedUser.getId(), existedEvent.getId());
@@ -52,6 +111,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         checkConstraintParticipationLimit(existedEvent, mappedRequest);
         checkConstraintRequestModeration(existedEvent, mappedRequest);
         return mappedRequest;
+    }
+
+    private ParticipationRequest getExistedRequest(Long requestId) {
+        return requestRepository.findById(requestId)
+                .orElseThrow(() -> new NotFoundException("Request with id: " + requestId + " not found"));
     }
 
     private User getExistedUser(Long userId) {

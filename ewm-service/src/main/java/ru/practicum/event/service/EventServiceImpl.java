@@ -53,7 +53,7 @@ public class EventServiceImpl implements EventService {
         log.debug("/create event");
         User existedUser = getExistedUser(userId);
         Category existedCategory = getExistedCategory(eventRequestDto.getCategory());
-        checkEventDateConstraint(eventRequestDto);
+        checkConstraintEventDate(eventRequestDto.getEventDate());
         Event eventToSave = EventMapper.toModel(eventRequestDto);
         eventToSave.setInitiator(existedUser);
         eventToSave.setCategory(existedCategory);
@@ -69,10 +69,28 @@ public class EventServiceImpl implements EventService {
         Event existedEvent = getExistedEvent(eventId);
         checkStateActionConstraint(updateEventDto, existedEvent);
         checkPublishedOnConstraint(updateEventDto, existedEvent);
+        checkConstraintEventDate(updateEventDto.getEventDate());
         Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
                                                              getCategoryForPatch(updateEventDto),
                                                              existedEvent);
-        Integer confirmedRequests = requestRepository.countAllByStatusIs(ParticipationRequestState.APPROVED);
+        Integer confirmedRequests = requestRepository.countAllByStatusIs(ParticipationRequestState.CONFIRMED); //TODO ??? было APPROVED
+        log.debug("Confirmed request: {}", confirmedRequests);
+        Event savedEvent = eventRepository.save(updatedEvent);
+        return EventMapper.toFullDto(savedEvent, confirmedRequests, getCountViews(eventId));
+    }
+
+    @Transactional
+    @Override
+    public EventFullDto updateEventUser(Long userId, Long eventId, UpdateEventUserRequest updateEventDto) {
+        log.debug("/update event user");
+        getExistedUser(userId);
+        Event existedEvent = getExistedEvent(eventId);
+        checkConstraintState(existedEvent);
+        checkConstraintEventDate(updateEventDto.getEventDate());
+        Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
+                                                             getCategoryForPatch(updateEventDto),
+                                                             existedEvent);
+        Integer confirmedRequests = requestRepository.countAllByStatusIs(ParticipationRequestState.CONFIRMED);
         log.debug("Confirmed request: {}", confirmedRequests);
         Event savedEvent = eventRepository.save(updatedEvent);
         return EventMapper.toFullDto(savedEvent, confirmedRequests, getCountViews(eventId));
@@ -81,11 +99,22 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getEventsByUser(Long userId, Integer from, Integer size) {
         getExistedUser(userId);
-        List<Event> searchedEvents = eventRepository.findAllByInitiator_Id(userId, new PageConfig(from, size, Sort.unsorted())).stream()
-                .collect(Collectors.toList());
+        List<Event> searchedEvents =
+                eventRepository.findAllByInitiator_Id(userId, new PageConfig(from, size, Sort.unsorted()))
+                        .stream()
+                        .collect(Collectors.toList());
         Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
         Map<Long, Long> eventIdCountHits = getViews(searchedEvents);
         return setRequestsAndViewsShortDto(searchedEvents, eventIdConfirmedRequestsMap, eventIdCountHits);
+    }
+
+    @Override
+    public EventFullDto getEventByUser(Long userId, Long eventId) {
+        getExistedUser(userId);
+        Event existedEvent = getExistedEvent(eventId);
+        return EventMapper.toFullDto(existedEvent,
+                                     requestRepository.countAllByEvent_IdIs(eventId),
+                                     getCountViews(eventId));
     }
 
     @Override
@@ -101,7 +130,7 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public List<EventShortDto> getEventsForPublic(String text, List<Long> categories, Boolean paid,
+    public List<EventShortDto> publicSearchEvents(String text, List<Long> categories, Boolean paid,
                                                   LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                   EventViewSort sort, Boolean onlyAvailable, Integer from, Integer size,
                                                   HttpServletRequest request) {
@@ -123,15 +152,22 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
+    private void checkConstraintState(Event existedEvent) {
+        if (existedEvent.getState() == EventState.PUBLISHED) {
+            throw new FieldConflictException("Event state must not be PUBLISHED for update event");
+        }
+    }
+
     @Override
-    public List<EventFullDto> getEventsForAdmin(List<Long> users, List<EventState> states, List<Long> categories,
+    public List<EventFullDto> searchEventsAdmin(List<Long> users, List<EventState> states, List<Long> categories,
                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from,
-                                                                                                    Integer size) {
-        log.debug("/get events for admin");
+                                                Integer size) {
+        log.debug("/search events admin api");
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
         List<Event> searchedEvents =
-                eventRepository.getEventsForAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest)
-                .stream().collect(Collectors.toList());
+                eventRepository.searchEventsAdmin(users, states, categories, rangeStart, rangeEnd, pageRequest)
+                        .stream()
+                        .collect(Collectors.toList());
         Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
         Map<Long, Long> eventIdCountHits = getViews(searchedEvents);
         return setRequestsAndViewsFullDto(searchedEvents, eventIdConfirmedRequestsMap, eventIdCountHits);
@@ -153,12 +189,14 @@ public class EventServiceImpl implements EventService {
 
     private void checkPublishedOnConstraint(UpdateEventUserRequest updateEventDto, Event existedEvent) {
         LocalDateTime actualPublishedOn = existedEvent.getPublishedOn();
-        if (actualPublishedOn != null && !updateEventDto.getEventDate().isAfter(actualPublishedOn.plusHours(1)))
+        if (updateEventDto.getEventDate() == null || existedEvent.getPublishedOn() == null) return; // TODO
+        if (!updateEventDto.getEventDate().isAfter(actualPublishedOn.plusHours(1)))
             throw new ValidateException("Event date must be later then publication date on 1 hour");
     }
 
     private void checkStateActionConstraint(UpdateEventUserRequest updateEventDto, Event existedEvent) {
         StateAction newStateAction = updateEventDto.getStateAction();
+        if (newStateAction == null) return; //TODO ????
         EventState actualState = existedEvent.getState();
         if (newStateAction.equals(StateAction.PUBLISH_EVENT) && actualState.equals(EventState.PUBLISHED)) {
             throw new FieldConflictException("Event already PUBLISHED");
@@ -179,9 +217,10 @@ public class EventServiceImpl implements EventService {
         return newCategoryId == null ? Optional.empty() : categoryRepository.findById(newCategoryId);
     }
 
-    private void checkEventDateConstraint(NewEventDto eventRequestDto) {
+    private void checkConstraintEventDate(LocalDateTime eventDate) {
+        if (eventDate == null) return;
         final Instant now = Instant.now();
-        final Instant eventDateTime = eventRequestDto.getEventDate().toInstant(ZoneOffset.UTC);
+        final Instant eventDateTime = eventDate.toInstant(ZoneOffset.UTC);
         long hoursDifference = ChronoUnit.HOURS.between(now, eventDateTime);
         if (hoursDifference < 2L) throw new ValidateException("Event date-time can't be early then 2 hours at now");
     }
@@ -240,7 +279,7 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
         //key - EventId, value - countConfirmedRequests
         Map<Long, Long> confirmedRequestsMap =
-                requestRepository.getCountEventRequests(searchedEventsIds, ParticipationRequestState.APPROVED)
+                requestRepository.getCountEventRequests(searchedEventsIds, ParticipationRequestState.CONFIRMED)
                         .stream()
                         .collect(Collectors.toMap(CountEventRequests::getEventId, CountEventRequests::getRequests));
         return confirmedRequestsMap;

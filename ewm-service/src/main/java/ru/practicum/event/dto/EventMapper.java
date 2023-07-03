@@ -75,22 +75,14 @@ public class EventMapper {
     public Event patchMappingToModel(UpdateEventUserRequest updateDto, Optional<Category> category, Event existedEvent) {
         log.debug("/patch event from dto");
         ObjectMapper mapper = ObjectMapperConfig.getPatchMapperConfig();
-        Map<String, String > updateDtoMap = mapper.convertValue(updateDto, Map.class);
-        Map<String, String > existedEventMap = mapper.convertValue(existedEvent, Map.class);
-        Map<String, String > changedFields = updateDtoMap.entrySet().stream()
+        Map<String, String> updateDtoMap = mapper.convertValue(updateDto, Map.class);
+        Map<String, String> existedEventMap = mapper.convertValue(existedEvent, Map.class);
+        Map<String, String> changedFields = updateDtoMap.entrySet().stream()
                                         .filter(entry -> entry.getValue() != null
                                                 && !entry.getKey().equals("location")
                                                 && !entry.getKey().equals("category"))
                                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        String newStateAction = changedFields.get("stateAction");
-        if (newStateAction.equalsIgnoreCase(StateAction.PUBLISH_EVENT.name())) {
-            changedFields.put("state", EventState.PUBLISHED.name());
-            changedFields.remove("stateAction");
-        }
-        if (newStateAction.equalsIgnoreCase(StateAction.REJECT_EVENT.name())) {
-            changedFields.put("state", EventState.CANCELED.name());
-            changedFields.remove("stateAction");
-        }
+        mapStateActionToState(changedFields);
         existedEventMap.putAll(changedFields);
         Event updatedEvent = mapper.convertValue(existedEventMap, Event.class);
         if (updatedEvent.getState() == EventState.PUBLISHED) updatedEvent.setPublishedOn(LocalDateTime.now());
@@ -124,15 +116,24 @@ public class EventMapper {
         return dto;
     }
 
-//    private ObjectMapper getPatchEventMapper() {
-//        log.debug("/get patch event mapper");
-//        JavaTimeModule timeModule = new JavaTimeModule();
-//        timeModule.addDeserializer(LocalDateTime.class,
-//                new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(Constant.dateTimeFormat)));
-//        return JsonMapper.builder()
-//                .addModule(timeModule)
-//                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-//                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-//                .build();
-//    }
+    private void mapStateActionToState(Map<String, String> changedFields) {
+        String newStateAction = changedFields.get("stateAction");
+        if (newStateAction == null) return;
+        if (newStateAction.equalsIgnoreCase(StateAction.PUBLISH_EVENT.name())) {
+            changedFields.put("state", EventState.PUBLISHED.name());
+            changedFields.remove("stateAction");
+        }
+        if (newStateAction.equalsIgnoreCase(StateAction.REJECT_EVENT.name())) {
+            changedFields.put("state", EventState.CANCELED.name());
+            changedFields.remove("stateAction");
+        }
+        if (newStateAction.equalsIgnoreCase(StateAction.SEND_TO_REVIEW.name())) {
+            changedFields.put("state", EventState.PENDING.name());
+            changedFields.remove("stateAction");
+        }
+        if (newStateAction.equalsIgnoreCase(StateAction.CANCEL_REVIEW.name())) {
+            changedFields.put("state", EventState.CANCELED.name());
+            changedFields.remove("stateAction");
+        }
+    }
 }
