@@ -135,9 +135,10 @@ public class EventServiceImpl implements EventService {
                                                   EventViewSort sort, Boolean onlyAvailable, Integer from, Integer size,
                                                   HttpServletRequest request) {
         log.debug("/get events for public");
-        checkConstraintStartEndRange(getStartTime(rangeStart), rangeEnd);
+        checkConstraintStartEndRange(getStartDate(rangeStart), rangeEnd);
+        LocalDateTime startDate = getStartDate(rangeStart);//TODO убрал в параметрах text
         List<Event> searchedEvents = eventRepository.getEventsForPublic(
-                                    text, categories, paid, getStartTime(rangeStart), rangeEnd, EventState.PUBLISHED,
+                                    text, categories, paid, startDate, rangeEnd, EventState.PUBLISHED,
                                     new PageConfig(from, size, Sort.unsorted())).stream().collect(Collectors.toList());
         Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
         checkOnlyAvailableParam(onlyAvailable, searchedEvents, eventIdConfirmedRequestsMap);
@@ -267,7 +268,7 @@ public class EventServiceImpl implements EventService {
         return Comparator.comparing(EventShortDto::getViews);
     }
 
-    private LocalDateTime getStartTime(LocalDateTime rangeStart) {
+    private LocalDateTime getStartDate(LocalDateTime rangeStart) {
         if (rangeStart == null) return LocalDateTime.now();
         return rangeStart;
     }
