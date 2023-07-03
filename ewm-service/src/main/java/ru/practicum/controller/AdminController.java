@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.dto.NewCategoryDto;
 import ru.practicum.category.service.CategoryService;
+import ru.practicum.compilation.dto.CompilationDto;
+import ru.practicum.compilation.dto.NewCompilationDto;
+import ru.practicum.compilation.dto.UpdateCompilationRequest;
+import ru.practicum.compilation.service.CompilationService;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.model.EventState;
@@ -30,6 +34,7 @@ public class AdminController {
     private final UserService adminService;
     private final CategoryService categoryService;
     private final EventService eventService;
+    private final CompilationService compilationService;
 
     // USERS --->
 
@@ -107,5 +112,29 @@ public class AdminController {
         log.debug("/updateEvent");
         log.debug("Income parameters: eventId: {}, eventDto: {}", eventId, eventDto.toString());
         return eventService.updateEventAdmin(eventId, eventDto);
+    }
+
+    // COMPILATIONS --->
+
+    @PostMapping("/compilations")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CompilationDto createCompilation(@Valid @RequestBody NewCompilationDto compilationDto) {
+        log.debug("/create compilation");
+        return compilationService.createCompilation(compilationDto);
+    }
+
+    @DeleteMapping("/compilations/{compId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCompilation(@PathVariable Long compId) {
+        log.debug("/delete compilation");
+        log.debug("Income: compId: {}", compId);
+        compilationService.deleteCompilation(compId);
+    }
+
+    @PatchMapping("/compilations/{compId}")
+    public CompilationDto updateCompilation(@PathVariable Long compId,
+                                            @Valid @RequestBody UpdateCompilationRequest updateCompilationDto) {
+        log.debug("/update compilation");
+        return compilationService.updateCompilation(compId, updateCompilationDto);
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.exception.FieldConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
@@ -22,6 +23,7 @@ import ru.practicum.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
@@ -76,14 +78,16 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         return ParticipationRequestMapper.toDto(request);
     }
 
+    //TODO WIP
     @Transactional
     @Override
     public EventRequestStatusUpdateResult changeRequestsStatus(Long userId, Long eventId,
                                                                EventRequestStatusUpdateRequest requestDto) {
         log.debug("/change event requests status");
         getExistedUser(userId);
-        getExistedEvent(eventId);
+        Event existedEvent = getExistedEvent(eventId);
         List<ParticipationRequest> existedRequests = requestRepository.findAllById(requestDto.getRequestIds());
+        existedRequests.forEach(request -> checkConstraintParticipationLimit(existedEvent, request));
         existedRequests.forEach(request -> request.setStatus(requestDto.getStatus()));
         requestRepository.saveAll(existedRequests);
         EventRequestStatusUpdateResult result = new EventRequestStatusUpdateResult();
@@ -130,26 +134,32 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     private void checkConstraintInitiatorRequesterEquals(User existedUser, Event existedEvent) {
         if (Objects.equals(existedEvent.getInitiator().getId(), existedUser.getId()))
-            throw new ValidateException("Initiator can't create request for his event");
+            throw new FieldConflictException("Initiator can't create request for his event");
     }
 
     private void checkConstraintRequestExisted(ParticipationRequest existedRequest) {
-        if (existedRequest != null) throw new ValidateException("Request already exist");
+        if (existedRequest != null) throw new FieldConflictException("Request already exist");
     }
 
     private void checkConstraintPublished(Event existedEvent) {
         if (!existedEvent.getState().equals(EventState.PUBLISHED))
-            throw new ValidateException("Event not published");
+            throw new FieldConflictException("Event not published");
     }
 
     private void checkConstraintParticipationLimit(Event event, ParticipationRequest request) {
-        if (event.getParticipantLimit() != 0) {
-            if (Objects.equals(event.getParticipantLimit(), requestRepository.countAllByEvent_IdIs(event.getId()))) {
-                throw new ValidateException("Reached the limit request . Limit: " + event.getParticipantLimit());
-            }
-        } else { // todo тут приходит NULL
+        if (event.getParticipantLimit() == 0) {//TODO было через ELSE
             request.setStatus(ParticipationRequestState.CONFIRMED);
+            return;
         }
+        Integer confirmedRequests =
+                requestRepository.countAllByEvent_IdIsAndStatusIs(event.getId(), ParticipationRequestState.CONFIRMED);
+        if (event.getParticipantLimit() == confirmedRequests) {
+            throw new FieldConflictException("Reached the limit request . Limit: " + event.getParticipantLimit());
+        }
+//        if (event.getParticipantLimit() == requestRepository.countAllByEvent_IdIs(event.getId())) {
+//            throw new FieldConflictException("Reached the limit request . Limit: " + event.getParticipantLimit());
+//        }
+
     }
 
     private void checkConstraintRequestModeration(Event existedEvent, ParticipationRequest request) {

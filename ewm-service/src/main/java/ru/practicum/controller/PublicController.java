@@ -67,5 +67,4 @@ public class PublicController {
         log.debug("Income eventId: {}", eventId);
         return eventService.getEventById(eventId, request);
     }
-
 }
