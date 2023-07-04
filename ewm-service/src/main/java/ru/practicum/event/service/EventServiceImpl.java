@@ -144,6 +144,8 @@ public class EventServiceImpl implements EventService {
                                                   EventViewSort sort, Boolean onlyAvailable, Integer from, Integer size,
                                                   HttpServletRequest request) {
         log.debug("/get events for public");
+        statsClient.saveEndpointHit(
+                Constant.mainAppName, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
         checkConstraintStartEndRange(getStartDate(rangeStart), rangeEnd);
         LocalDateTime startDate = getStartDate(rangeStart);
         List<Event> searchedEvents = eventRepository.getEventsForPublic(text,
