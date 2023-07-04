@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.service.CategoryService;
+import ru.practicum.compilation.dto.CompilationDto;
+import ru.practicum.compilation.service.CompilationService;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.service.EventService;
@@ -25,6 +27,7 @@ import java.util.List;
 public class PublicController {
     private final CategoryService categoryService;
     private final EventService eventService;
+    private final CompilationService compilationService;
 
     @GetMapping("/categories")
     public List<CategoryDto> getAllCategories(@RequestParam(defaultValue = "0") Integer from,
@@ -66,5 +69,13 @@ public class PublicController {
         log.debug("/get event by id");
         log.debug("Income eventId: {}", eventId);
         return eventService.getEventById(eventId, request);
+    }
+
+    @GetMapping("/compilations")
+    public List<CompilationDto> getAllCompilations(@RequestParam(required = false) Boolean pinned,
+                                                   @RequestParam(defaultValue = "0") Integer from,
+                                                   @RequestParam(defaultValue = "10") Integer size) {
+        log.debug("/get all compilations");
+        return compilationService.getAllCompilations(pinned, from, size);
     }
 }

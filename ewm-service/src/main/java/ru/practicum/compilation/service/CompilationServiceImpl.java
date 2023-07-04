@@ -2,12 +2,12 @@ package ru.practicum.compilation.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatsServiceClient;
-import ru.practicum.category.model.Category;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.CompilationMapper;
 import ru.practicum.compilation.dto.NewCompilationDto;
@@ -21,10 +21,10 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.request.model.CountEventRequests;
-import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
 import ru.practicum.utils.Constant;
+import ru.practicum.utils.PageConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class CompilationServiceImpl implements CompilationService {
-    private final CompilationRepository compilationRepository;
+    private final CompilationRepository compRepository;
     private final EventRepository eventRepository;
     private final ParticipationRequestRepository requestRepository;
     private final StatsServiceClient statsClient;
@@ -47,8 +47,7 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto createCompilation(NewCompilationDto compilationDto) {
         log.debug("/create compilation");
         List<Event> existedEvents = eventRepository.findAllById(compilationDto.getEvents());
-        Compilation savedCompilation =
-                                compilationRepository.save(CompilationMapper.toModel(compilationDto, existedEvents));
+        Compilation savedCompilation = compRepository.save(CompilationMapper.toModel(compilationDto, existedEvents));
         log.debug("Saved id: {}", savedCompilation.getId());
         Map<Long, Long> requests = getConfirmedRequests(existedEvents);
         Map<Long, Long> views = getViews(existedEvents);
@@ -61,7 +60,7 @@ public class CompilationServiceImpl implements CompilationService {
     public void deleteCompilation(Long compId) {
         log.debug("/delete compilation");
         getExistedCompilation(compId);
-        compilationRepository.deleteById(compId);
+        compRepository.deleteById(compId);
     }
 
     @Transactional
@@ -71,15 +70,44 @@ public class CompilationServiceImpl implements CompilationService {
         List<Event> existedEvents = eventRepository.findAllById(updateCompilationDto.getEvents());
         Compilation updatedCompilation =
                 CompilationMapper.patchMappingToModel(existedCompilation, updateCompilationDto, existedEvents);
-        Compilation savedCompilation = compilationRepository.save(updatedCompilation);
+        Compilation savedCompilation = compRepository.save(updatedCompilation);
         Map<Long, Long> requests = getConfirmedRequests(existedEvents);
         Map<Long, Long> views = getViews(existedEvents);
         List<EventShortDto> eventShortDtos = setRequestsAndViewsShortDto(existedEvents, requests, views);
         return CompilationMapper.toDto(savedCompilation, eventShortDtos);
     }
 
+    @Override
+    public List<CompilationDto> getAllCompilations(Boolean pinned, Integer from, Integer size) {
+        log.debug("/get all compilations");
+        List<Compilation> searchedCompilations =
+                compRepository.getAllCompilations(pinned, new PageConfig(from, size, Sort.unsorted()));
+        List<Event> compilationEvents = new ArrayList<>();
+        searchedCompilations.forEach(compilation -> compilationEvents.addAll(compilation.getEvents()));
+        Map<Long, Long> requests = getConfirmedRequests(compilationEvents);
+        Map<Long, Long> views = getViews(compilationEvents);
+
+        List<CompilationDto> result = new ArrayList<>();
+        searchedCompilations
+        .forEach(compilation -> result.add(CompilationMapper.toDto(compilation,
+                                                                   setRequestsAndViewsShortDto( compilation.getEvents(),
+                                                                                                requests,
+                                                                                                views))));
+        return result;
+    }
+
+    @Override
+    public CompilationDto getCompilationById(Long compId) {
+        log.debug("/get compilation by id");
+        Compilation compilation = getExistedCompilation(compId);
+        Map<Long, Long> requests = getConfirmedRequests(compilation.getEvents());
+        Map<Long, Long> views = getViews(compilation.getEvents());
+        return CompilationMapper.toDto( compilation,
+                                        setRequestsAndViewsShortDto(compilation.getEvents(), requests, views));
+    }
+
     private Compilation getExistedCompilation(Long compId) {
-        return compilationRepository.findById(compId)
+        return compRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Compilation id=" + compId + " not found"));
     }
 
