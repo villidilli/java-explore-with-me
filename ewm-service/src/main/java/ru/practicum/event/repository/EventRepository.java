@@ -36,15 +36,3 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     List<Event> findAllByCategory_Id(Long catId);
 }
-//TODO WIP
-//@Query( "SELECT e " +
-//        "FROM Event AS e " +
-//        "WHERE ((e.annotation IS NULL OR LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) " +
-//        "OR (e.description IS NULL OR LOWER(e.description) LIKE LOWER(CONCAT('%', :text, '%')))) " +
-//        "OR (e.title IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :text, '%')))) " +
-//        "AND (:categories IS NULL OR e.category.id IN :categories) " +
-//        "AND (:paid IS NULL OR e.paid = :paid) " +
-//        "AND (e.eventDate BETWEEN :rangeStart AND :rangeEnd) " +
-//        "AND (e.state = :state)") // TODO убрать у времени COALESCE и NULL
-//Page<Event> getEventsForPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
-//                               LocalDateTime rangeEnd, EventState state, PageRequest request);

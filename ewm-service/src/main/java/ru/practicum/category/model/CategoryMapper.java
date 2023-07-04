@@ -1,6 +1,7 @@
 package ru.practicum.category.model;
 
 import lombok.experimental.UtilityClass;
+
 import ru.practicum.category.dto.NewCategoryDto;
 import ru.practicum.category.dto.CategoryDto;
 

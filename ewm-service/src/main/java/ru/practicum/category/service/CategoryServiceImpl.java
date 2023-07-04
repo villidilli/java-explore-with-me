@@ -2,23 +2,27 @@ package ru.practicum.category.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.practicum.category.dto.NewCategoryDto;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.model.CategoryMapper;
 import ru.practicum.category.repository.CategoryRepository;
+
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
+
 import ru.practicum.exception.FieldConflictException;
 import ru.practicum.exception.NotFoundException;
+
 import ru.practicum.utils.PageConfig;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 
 @Transactional(readOnly = true)
 @Service
@@ -37,9 +41,9 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryMapper.toDto(savedCategory);
     }
 
-    @Transactional
     @Override
-    public void deleteCategory(Long catId) throws NotFoundException {
+    @Transactional
+    public void deleteCategory(Long catId) {
         log.debug("/delete category");
         getExistedCategory(catId);
         checkConstraintUsingEvents(catId);
@@ -62,11 +66,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto updateCategory(Long catId,
-                                      NewCategoryDto categoryRequestDto) throws NotFoundException {
+    public CategoryDto updateCategory(Long catId, NewCategoryDto categoryRequestDto) throws NotFoundException {
         log.debug("/update category");
         Category existedCategory = getExistedCategory(catId);
-
         if (existedCategory.getName().equals(categoryRequestDto.getName())) {
             return CategoryMapper.toDto(existedCategory);
         }
@@ -75,18 +77,18 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryMapper.toDto(updatedCategory);
     }
 
-    private void checkConstraintUsingEvents(Long catId) {
+    private void checkConstraintUsingEvents(Long catId) throws FieldConflictException {
         List<Event> usingEvents = eventRepository.findAllByCategory_Id(catId);
         if (usingEvents.size() != 0) throw new FieldConflictException("Many events using deleting category");
     }
 
-    private Category getExistedCategory(Long catId) {
+    private Category getExistedCategory(Long catId) throws NotFoundException {
         return categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + catId + " was not found"));
     }
 
-    private void checkConstraintNameExisted(String newName, Long catId) {
-        if(categoryRepository.findByNameContainsIgnoreCaseAndIdIsNot(newName, catId).size() != 0) {
+    private void checkConstraintNameExisted(String newName, Long catId) throws FieldConflictException {
+        if (categoryRepository.findByNameContainsIgnoreCaseAndIdIsNot(newName, catId).size() != 0) {
             throw new FieldConflictException("Field: name. Error: name is already exists");
         }
     }

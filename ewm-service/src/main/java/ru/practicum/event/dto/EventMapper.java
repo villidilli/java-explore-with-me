@@ -3,6 +3,7 @@ package ru.practicum.event.dto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.model.Event;
@@ -21,7 +22,6 @@ import java.util.stream.Collectors;
 public class EventMapper {
 
     public Event toModel(NewEventDto dto) {
-        log.debug("/event dto to model");
         Event model = new Event();
         model.setAnnotation(dto.getAnnotation());
         Category category = new Category();
@@ -42,7 +42,6 @@ public class EventMapper {
     }
 
     public EventFullDto toFullDto(Event model, Integer confirmedRequests, Integer views) {
-        log.debug("/event to dto");
         EventFullDto dto = new EventFullDto();
         dto.setId(model.getId());
         dto.setAnnotation(model.getAnnotation());
@@ -72,11 +71,10 @@ public class EventMapper {
         return dto;
     }
 
-    public Event patchMappingToModel(UpdateEventUserRequest updateDto, Optional<Category> category, Event existedEvent) {
-        log.debug("/patch event from dto");
+    public Event patchMappingToModel(UpdateEventUserRequest updateDto, Optional<Category> category, Event existEvent) {
         ObjectMapper mapper = ObjectMapperConfig.getPatchMapperConfig();
         Map<String, String> updateDtoMap = mapper.convertValue(updateDto, Map.class);
-        Map<String, String> existedEventMap = mapper.convertValue(existedEvent, Map.class);
+        Map<String, String> existedEventMap = mapper.convertValue(existEvent, Map.class);
         Map<String, String> changedFields = updateDtoMap.entrySet().stream()
                                         .filter(entry -> entry.getValue() != null
                                                 && !entry.getKey().equals("location")

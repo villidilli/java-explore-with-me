@@ -35,15 +35,4 @@ public class EventFullDto {
     private EventState state;
     private String title;
     private Integer views;
-
-
-//    @Getter
-//    @Setter
-//    @NoArgsConstructor
-//    @AllArgsConstructor
-//    @ToString
-//    public static class UserShortDto {
-//        private Long id;
-//        private String name;
-//    }
 }

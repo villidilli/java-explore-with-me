@@ -2,18 +2,23 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.service.CategoryService;
+
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.service.CompilationService;
+
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.service.EventService;
+
 import ru.practicum.utils.Constant;
 import ru.practicum.utils.EventViewSort;
 
@@ -59,6 +64,9 @@ public class PublicController {
                             @RequestParam(defaultValue = "10") Integer size,
                             HttpServletRequest request) {
         log.debug("/get all events");
+        log.debug("Income text: {}, categories: {}, paid: {}, rangeStart: {}, rangeEnd: {}, onlyAvailable: {}, " +
+                    "sort: {}, from: {}, size: {}", text, categories.toString(), paid, rangeStart, rangeEnd,
+                    onlyAvailable, sort, from, size);
         return eventService.publicSearchEvents(text, categories, paid, rangeStart, rangeEnd,
                                                 sort, onlyAvailable, from, size, request);
     }
@@ -76,12 +84,14 @@ public class PublicController {
                                                    @RequestParam(defaultValue = "0") Integer from,
                                                    @RequestParam(defaultValue = "10") Integer size) {
         log.debug("/get all compilations");
+        log.debug("Income: pinned: {}, from: {}, size: {}", pinned, from, size);
         return compilationService.getAllCompilations(pinned, from, size);
     }
 
     @GetMapping("/compilations/{compId}")
     public CompilationDto getCompilationById(@PathVariable Long compId) {
         log.debug("/get compilation by id");
+        log.debug("Income compId: {}", compId);
         return compilationService.getCompilationById(compId);
     }
 }

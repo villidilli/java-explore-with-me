@@ -2,26 +2,31 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.dto.NewCategoryDto;
 import ru.practicum.category.service.CategoryService;
+
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.compilation.service.CompilationService;
+
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.service.EventService;
+
 import ru.practicum.user.dto.NewUserRequest;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.service.UserService;
+
 import ru.practicum.utils.Constant;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,8 +40,6 @@ public class AdminController {
     private final CategoryService categoryService;
     private final EventService eventService;
     private final CompilationService compilationService;
-
-    // USERS --->
 
     @GetMapping("/users")
     public List<UserDto> getAllUsers(@RequestParam(required = false) Long[] ids,
@@ -61,8 +64,6 @@ public class AdminController {
         adminService.deleteUser(userId);
     }
 
-    // CATEGORIES --->
-
     @PostMapping("/categories")
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto categoryRequestDto) {
@@ -86,8 +87,6 @@ public class AdminController {
         return categoryService.updateCategory(catId, categoryRequestDto);
     }
 
-    // EVENTS --->
-
     @GetMapping("/events")
     public List<EventFullDto> searchEvents(
                                     @RequestParam(required = false) List<Long> users,
@@ -107,19 +106,17 @@ public class AdminController {
 
     @PatchMapping("/events/{eventId}")
     public EventFullDto updateEvent(@PathVariable Long eventId,
-                                    @Valid @RequestBody UpdateEventUserRequest eventDto,
-                                    HttpServletRequest request) {
+                                    @Valid @RequestBody UpdateEventUserRequest eventDto) {
         log.debug("/updateEvent");
         log.debug("Income parameters: eventId: {}, eventDto: {}", eventId, eventDto.toString());
         return eventService.updateEventAdmin(eventId, eventDto);
     }
 
-    // COMPILATIONS --->
-
     @PostMapping("/compilations")
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilation(@Valid @RequestBody NewCompilationDto compilationDto) {
         log.debug("/create compilation");
+        log.debug("Income dto: {}", compilationDto.toString());
         return compilationService.createCompilation(compilationDto);
     }
 

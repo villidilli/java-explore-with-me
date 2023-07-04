@@ -2,27 +2,35 @@ package ru.practicum.compilation.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.practicum.StatsServiceClient;
+
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.CompilationMapper;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.compilation.repository.CompilationRepository;
+
 import ru.practicum.dto.ViewStatsDto;
+
 import ru.practicum.event.dto.EventMapper;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
+
 import ru.practicum.exception.NotFoundException;
+
 import ru.practicum.request.model.CountEventRequests;
 import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
+
 import ru.practicum.utils.Constant;
 import ru.practicum.utils.PageConfig;
 
@@ -42,8 +50,8 @@ public class CompilationServiceImpl implements CompilationService {
     private final ParticipationRequestRepository requestRepository;
     private final StatsServiceClient statsClient;
 
-    @Transactional
     @Override
+    @Transactional
     public CompilationDto createCompilation(NewCompilationDto compilationDto) {
         log.debug("/create compilation");
         List<Event> existedEvents = eventRepository.findAllById(compilationDto.getEvents());
@@ -55,16 +63,16 @@ public class CompilationServiceImpl implements CompilationService {
         return CompilationMapper.toDto(savedCompilation, eventShortDtos);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void deleteCompilation(Long compId) {
         log.debug("/delete compilation");
         getExistedCompilation(compId);
         compRepository.deleteById(compId);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationDto) {
         log.debug("/update compilation");
         Compilation existedCompilation = getExistedCompilation(compId);
@@ -87,7 +95,6 @@ public class CompilationServiceImpl implements CompilationService {
         searchedCompilations.forEach(compilation -> compilationEvents.addAll(compilation.getEvents()));
         Map<Long, Long> requests = getConfirmedRequests(compilationEvents);
         Map<Long, Long> views = getViews(compilationEvents);
-
         List<CompilationDto> result = new ArrayList<>();
         searchedCompilations
         .forEach(compilation -> result.add(CompilationMapper.toDto(compilation,
@@ -107,7 +114,7 @@ public class CompilationServiceImpl implements CompilationService {
                                         setRequestsAndViewsShortDto(compilation.getEvents(), requests, views));
     }
 
-    private Compilation getExistedCompilation(Long compId) {
+    private Compilation getExistedCompilation(Long compId) throws NotFoundException {
         return compRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Compilation id=" + compId + " not found"));
     }
@@ -127,34 +134,34 @@ public class CompilationServiceImpl implements CompilationService {
 
     private Map<Long, Long> getViews(List<Event> events) {
         String[] searchedEventsUris = events.stream()
-                .map(event -> {
-                    return "/events/" + event.getId();
-                }).collect(Collectors.toList()).toArray(new String[0]);
-
+                .map(event -> {return "/events/" + event.getId();})
+                .collect(Collectors.toList())
+                .toArray(new String[0]);
         ResponseEntity<List<ViewStatsDto>> views = statsClient.getViewStats(Constant.unreachableStart,
-                Constant.unreachableEnd,
-                searchedEventsUris,
-                false);
+                                                                            Constant.unreachableEnd,
+                                                                            searchedEventsUris,
+                                                                     false);
         Map<Long, Long> eventIdViews = new HashMap<>();
-        views.getBody()
-                .forEach(viewStatsDto -> eventIdViews.put(uriToEventId(viewStatsDto.getUri()), viewStatsDto.getHits()));
+        views.getBody().forEach(viewStatsDto -> eventIdViews.put(uriToEventId(viewStatsDto.getUri()),
+                                                                 viewStatsDto.getHits()));
         return eventIdViews;
     }
 
     private List<EventShortDto> setRequestsAndViewsShortDto(List<Event> searchedEvents, Map<Long, Long> requests,
-                                                            Map<Long, Long> views) {
+                                                                                        Map<Long, Long> views) {
         List<EventShortDto> resultList = new ArrayList<>();
-        searchedEvents.stream().forEach(event -> {
-            int requestsToSave = 0;
-            int viewsToSave = 0;
-            if (requests.containsKey(event.getId())) {
-                requestsToSave = requests.get(event.getId()).intValue();
-            }
-            if (views.containsKey(event.getId())) {
-                viewsToSave = views.get(event.getId()).intValue();
-            }
-            resultList.add(EventMapper.toShortDto(event, requestsToSave, viewsToSave));
-        });
+        searchedEvents.stream()
+                .forEach(event -> {
+                    int requestsToSave = 0;
+                    int viewsToSave = 0;
+                    if (requests.containsKey(event.getId())) {
+                        requestsToSave = requests.get(event.getId()).intValue();
+                    }
+                    if (views.containsKey(event.getId())) {
+                        viewsToSave = views.get(event.getId()).intValue();
+                    }
+                    resultList.add(EventMapper.toShortDto(event, requestsToSave, viewsToSave));
+                });
         return resultList;
     }
 

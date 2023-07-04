@@ -16,10 +16,7 @@ public class ParticipationRequestDto {
     private Long id;
     @JsonFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime created;
-//    @NotBlank
     private Long event;
-//    @NotBlank
     private Long requester;
     private ParticipationRequestState status;
-
 }

@@ -2,18 +2,20 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.service.EventService;
+
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.service.ParticipationRequestService;
-import ru.practicum.user.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -23,11 +25,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/users")
 public class PrivateController {
-    private final UserService userService;
     private final EventService eventService;
     private final ParticipationRequestService requestService;
-
-    // REQUESTS --->
 
     @PostMapping("/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
@@ -41,6 +40,7 @@ public class PrivateController {
     @GetMapping("/{userId}/requests")
     public List<ParticipationRequestDto> getRequestsByUser(@PathVariable Long userId) {
         log.debug("/get requests by user");
+        log.debug("Income userId: {}", userId);
         return requestService.getRequestsByUser(userId);
     }
 
@@ -48,6 +48,7 @@ public class PrivateController {
     public ParticipationRequestDto cancelOwnRequest(@PathVariable Long userId,
                                                     @PathVariable Long requestId) {
         log.debug("/cancel from own request");
+        log.debug("Income userId: {}, requestId: {}", userId, requestId);
         return requestService.cancelOwnRequest(userId, requestId);
     }
 
@@ -55,12 +56,11 @@ public class PrivateController {
     public EventRequestStatusUpdateResult changeRequestsStatus(@PathVariable Long userId,
                                                                @PathVariable Long eventId,
                                                                @RequestBody
-                                                               EventRequestStatusUpdateRequest requestDto) {
+                                                                    EventRequestStatusUpdateRequest requestDto) {
         log.debug("/change requests status");
+        log.debug("Income userId: {}, eventId: {}, requestDto: {}", userId, eventId, requestDto.toString());
         return requestService.changeRequestsStatus(userId, eventId, requestDto);
     }
-
-    // EVENTS --->
 
     @PostMapping("/{userId}/events")
     @ResponseStatus(HttpStatus.CREATED)
@@ -75,6 +75,8 @@ public class PrivateController {
     public List<EventShortDto> getEventsByUser(@PathVariable Long userId,
                                                @RequestParam(defaultValue = "0") Integer from,
                                                @RequestParam(defaultValue = "10") Integer size) {
+        log.debug("/get events by user");
+        log.debug("Income userId: {}", userId);
         return eventService.getEventsByUser(userId, from, size);
     }
 
@@ -91,6 +93,7 @@ public class PrivateController {
     public EventFullDto getEventByUser(@PathVariable Long userId,
                                        @PathVariable Long eventId) {
         log.debug("/get event by user");
+        log.debug("Income userId: {}, eventId: {}", userId, eventId);
         return eventService.getEventByUser(userId, eventId);
     }
 
@@ -98,6 +101,7 @@ public class PrivateController {
     public List<ParticipationRequestDto> getEventUserRequests(@PathVariable Long userId,
                                                            @PathVariable Long eventId) {
         log.debug("/get requests by user and event");
+        log.debug("Income userId: {}, eventId: {}", userId, eventId);
         return requestService.getRequestsByUserAndEvent(userId, eventId);
     }
 }
