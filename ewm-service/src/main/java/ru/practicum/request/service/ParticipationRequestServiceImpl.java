@@ -156,7 +156,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         }
         Integer confirmedRequests =
                 requestRepository.countAllByEvent_IdIsAndStatusIs(event.getId(), ParticipationRequestState.CONFIRMED);
-        if (event.getParticipantLimit() == confirmedRequests) {
+        if (Objects.equals(event.getParticipantLimit(), confirmedRequests)) {
             throw new FieldConflictException("Reached the limit request . Limit: " + event.getParticipantLimit());
         }
     }
