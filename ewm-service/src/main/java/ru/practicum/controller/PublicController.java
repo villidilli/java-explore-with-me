@@ -64,9 +64,6 @@ public class PublicController {
                             @RequestParam(defaultValue = "10") Integer size,
                             HttpServletRequest request) {
         log.debug("/get all events");
-        log.debug("Income text: {}, categories: {}, paid: {}, rangeStart: {}, rangeEnd: {}, onlyAvailable: {}, " +
-                    "sort: {}, from: {}, size: {}", text, categories.toString(), paid, rangeStart, rangeEnd,
-                    onlyAvailable, sort, from, size);
         return eventService.publicSearchEvents(text, categories, paid, rangeStart, rangeEnd,
                                                 sort, onlyAvailable, from, size, request);
     }
