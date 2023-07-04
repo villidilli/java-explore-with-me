@@ -66,6 +66,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     @Override
     public CompilationDto updateCompilation(Long compId, UpdateCompilationRequest updateCompilationDto) {
+        log.debug("/update compilation");
         Compilation existedCompilation = getExistedCompilation(compId);
         List<Event> existedEvents = eventRepository.findAllById(updateCompilationDto.getEvents());
         Compilation updatedCompilation =
