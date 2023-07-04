@@ -78,4 +78,10 @@ public class PublicController {
         log.debug("/get all compilations");
         return compilationService.getAllCompilations(pinned, from, size);
     }
+
+    @GetMapping("/compilations/{compId}")
+    public CompilationDto getCompilationById(@PathVariable Long compId) {
+        log.debug("/get compilation by id");
+        return compilationService.getCompilationById(compId);
+    }
 }

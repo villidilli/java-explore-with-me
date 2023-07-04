@@ -137,10 +137,4 @@ public class AdminController {
         log.debug("/update compilation");
         return compilationService.updateCompilation(compId, updateCompilationDto);
     }
-
-    @GetMapping("/compilations/{compId}")
-    public CompilationDto getCompilationById(@PathVariable Long compId) {
-        log.debug("/get compilation by id");
-        return compilationService.getCompilationById(compId);
-    }
 }
