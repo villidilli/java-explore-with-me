@@ -23,7 +23,7 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
 
     List<ParticipationRequest> findAllByEvent_Id(Long eventId);
 
-    @Query( "SELECT new ru.practicum.request.model.CountEventRequests(COUNT(r), r.event.id) " +
+    @Query("SELECT new ru.practicum.request.model.CountEventRequests(COUNT(r), r.event.id) " +
             "FROM ParticipationRequest AS r " +
             "WHERE r.event.id IN :eventIds AND r.status = :state " +
             "GROUP BY r.event.id")

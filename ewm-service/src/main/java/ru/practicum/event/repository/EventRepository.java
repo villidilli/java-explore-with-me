@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
-    @Query( "SELECT e " +
+    @Query("SELECT e " +
             "FROM Event AS e " +
             "WHERE :users IS NULL OR e.initiator.id IN :users " +
                 "AND :states IS NULL OR e.state IN :states " +
@@ -22,7 +22,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Page<Event> findAllByInitiator_Id(Long initiatorId, PageRequest pageRequest);
 
-    @Query( "SELECT e " +
+    @Query("SELECT e " +
             "FROM Event AS e " +
             "WHERE :text IS NULL OR ((LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%'))) " +
                                 "OR (LOWER(e.description) LIKE LOWER(CONCAT('%', :text, '%'))) " +

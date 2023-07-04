@@ -98,7 +98,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<CompilationDto> result = new ArrayList<>();
         searchedCompilations
         .forEach(compilation -> result.add(CompilationMapper.toDto(compilation,
-                                                                   setRequestsAndViewsShortDto( compilation.getEvents(),
+                                                                   setRequestsAndViewsShortDto(compilation.getEvents(),
                                                                                                 requests,
                                                                                                 views))));
         return result;
@@ -110,7 +110,7 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation compilation = getExistedCompilation(compId);
         Map<Long, Long> requests = getConfirmedRequests(compilation.getEvents());
         Map<Long, Long> views = getViews(compilation.getEvents());
-        return CompilationMapper.toDto( compilation,
+        return CompilationMapper.toDto(compilation,
                                         setRequestsAndViewsShortDto(compilation.getEvents(), requests, views));
     }
 
@@ -134,7 +134,9 @@ public class CompilationServiceImpl implements CompilationService {
 
     private Map<Long, Long> getViews(List<Event> events) {
         String[] searchedEventsUris = events.stream()
-                .map(event -> {return "/events/" + event.getId();})
+                .map(event -> {
+                    return "/events/" + event.getId();
+                })
                 .collect(Collectors.toList())
                 .toArray(new String[0]);
         ResponseEntity<List<ViewStatsDto>> views = statsClient.getViewStats(Constant.unreachableStart,
