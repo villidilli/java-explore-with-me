@@ -21,6 +21,15 @@ public class GlobalExceptionHandler {
                 e.getMessage());
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiError exceptionHandler(Throwable e) {
+        log.debug("/server error handler");
+        return prepareErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal server error",
+                e.getMessage());
+    }
+
     private ApiError prepareErrorResponse(HttpStatus status, String reason, String message) {
         ApiError error = new ApiError();
         error.setStatus(status.name());

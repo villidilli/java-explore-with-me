@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @ToString
 public class EventShortDto {
     @NotNull
-    Long id;
+    private Long id;
     @NotBlank
     private String annotation;
     @NotNull

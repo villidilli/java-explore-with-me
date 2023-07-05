@@ -30,7 +30,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "AND (:categories IS NULL OR e.category.id IN :categories) " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
             "AND (e.eventDate BETWEEN :rangeStart AND :rangeEnd) " +
-            "AND (e.state = :state)") // TODO убрать у времени COALESCE и NULL
+            "AND (e.state = :state)")
     Page<Event> getEventsForPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
                                    LocalDateTime rangeEnd, EventState state, PageRequest request);
 
