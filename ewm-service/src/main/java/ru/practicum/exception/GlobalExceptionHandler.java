@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,6 +40,15 @@ public class GlobalExceptionHandler {
         return prepareErrorResponse(HttpStatus.CONFLICT,
                 "For the requested operation the conditions are not met.",
                 e.getRootCause().getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError exceptionHandler(MissingServletRequestParameterException e) {
+        log.debug("/missing required parameter handler");
+        return prepareErrorResponse(HttpStatus.BAD_REQUEST,
+                "Incorrectly made request.",
+                e.getMessage());
     }
 
     @ExceptionHandler
