@@ -2,6 +2,7 @@ package ru.practicum.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,6 +17,15 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError exceptionHandler(ValidateException e) {
         log.debug("/conflict handler ValidateException");
+        return prepareErrorResponse(HttpStatus.BAD_REQUEST,
+                "Incorrectly made request.",
+                e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError exceptionHandler(MissingServletRequestParameterException e) {
+        log.debug("/missing request required handler");
         return prepareErrorResponse(HttpStatus.BAD_REQUEST,
                 "Incorrectly made request.",
                 e.getMessage());
