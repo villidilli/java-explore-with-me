@@ -12,7 +12,6 @@ import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.service.ParticipationRequestService;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
