@@ -2,23 +2,17 @@ package ru.practicum.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import ru.practicum.exception.FieldConflictException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.dto.NewUserRequest;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.model.User;
-import ru.practicum.user.repository.UserRepository;
-
-import ru.practicum.exception.FieldConflictException;
-import ru.practicum.exception.NotFoundException;
-import ru.practicum.exception.ValidateException;
-
-import ru.practicum.utils.PageConfig;
-
 import ru.practicum.user.model.UserMapper;
+import ru.practicum.user.repository.UserRepository;
+import ru.practicum.utils.PageConfig;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +28,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto createUser(NewUserRequest userRequestDto) {
         log.debug("/create user");
-        validateEmailParts(userRequestDto.getEmail());
         if (userRepository.findByNameContainsIgnoreCase(userRequestDto.getName()).size() != 0)
             throw new FieldConflictException("Field: name. Error: name is already exists");
         User savedUser = userRepository.save(UserMapper.toModel(userRequestDto));
@@ -61,17 +54,5 @@ public class UserServiceImpl implements UserService {
         log.debug("/delete user");
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User id: " + userId + " not found"));
         userRepository.deleteById(userId);
-    }
-
-    private void validateEmailParts(String email) throws ValidateException {
-        log.debug("/validate email");
-        String[] emailParts = email.split("@");
-        String local = emailParts[0];
-        String[] domainParts = emailParts[1].split("\\.");
-        log.debug("local= {}, domain= {}, total= {}", emailParts[0].length(), emailParts[1].length(), email.length());
-        if (local.length() > 64) throw new ValidateException("Email (local) length must be 64 chars");
-        for (String domainPart : domainParts) {
-            if (domainPart.length() > 63) throw new ValidateException("Email (domain) length must be 63 chars");
-        }
     }
 }
