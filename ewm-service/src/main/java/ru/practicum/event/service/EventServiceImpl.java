@@ -2,46 +2,34 @@ package ru.practicum.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-
 import ru.practicum.StatsServiceClient;
-
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
-
 import ru.practicum.dto.ViewStatsDto;
-
 import ru.practicum.event.dto.*;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
-
 import ru.practicum.exception.FieldConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
-
 import ru.practicum.request.model.CountEventRequests;
 import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
-
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
-
 import ru.practicum.utils.Constant;
 import ru.practicum.utils.EventViewSort;
 import ru.practicum.utils.PageConfig;
 
 import javax.servlet.http.HttpServletRequest;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,7 +50,6 @@ public class EventServiceImpl implements EventService {
         log.debug("/create event");
         User existedUser = getExistedUser(userId);
         Category existedCategory = getExistedCategory(eventRequestDto.getCategory());
-        checkConstraintEventDate(eventRequestDto.getEventDate());
         Event eventToSave = EventMapper.toModel(eventRequestDto);
         eventToSave.setInitiator(existedUser);
         eventToSave.setCategory(existedCategory);
@@ -78,7 +65,6 @@ public class EventServiceImpl implements EventService {
         Event existedEvent = getExistedEvent(eventId);
         checkStateActionConstraint(updateEventDto, existedEvent);
         checkPublishedOnConstraint(updateEventDto, existedEvent);
-        checkConstraintEventDate(updateEventDto.getEventDate());
         Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
                                                              getCategoryForPatch(updateEventDto),
                                                              existedEvent);
@@ -94,7 +80,6 @@ public class EventServiceImpl implements EventService {
         getExistedUser(userId);
         Event existedEvent = getExistedEvent(eventId);
         checkConstraintState(existedEvent);
-        checkConstraintEventDate(updateEventDto.getEventDate());
         Event updatedEvent = EventMapper.patchMappingToModel(updateEventDto,
                                                              getCategoryForPatch(updateEventDto),
                                                              existedEvent);
@@ -237,14 +222,6 @@ public class EventServiceImpl implements EventService {
     private Optional<Category> getCategoryForPatch(UpdateEventUserRequest updateEventDto) {
         Long newCategoryId = updateEventDto.getCategory();
         return newCategoryId == null ? Optional.empty() : categoryRepository.findById(newCategoryId);
-    }
-
-    private void checkConstraintEventDate(LocalDateTime eventDate) throws ValidateException {
-        if (eventDate == null) return;
-        final Instant now = Instant.now();
-        final Instant eventDateTime = eventDate.toInstant(ZoneOffset.UTC);
-        long hoursDifference = ChronoUnit.HOURS.between(now, eventDateTime);
-        if (hoursDifference < 2L) throw new ValidateException("Event date-time can't be early then 2 hours at now");
     }
 
     private Category getExistedCategory(Long catId) throws NotFoundException {
