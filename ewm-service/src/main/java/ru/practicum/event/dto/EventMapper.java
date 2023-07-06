@@ -68,36 +68,6 @@ public class EventMapper {
         return dto;
     }
 
-//    public EventFullDto toFullDto(Event model, Integer confirmedRequests, Integer views) {
-//        EventFullDto dto = new EventFullDto();
-//        dto.setId(model.getId());
-//        dto.setAnnotation(model.getAnnotation());
-//        CategoryDto categoryDto = new CategoryDto();
-//        categoryDto.setId(model.getCategory().getId());
-//        categoryDto.setName(model.getCategory().getName());
-//        dto.setCategory(categoryDto);
-//        dto.setConfirmedRequests(confirmedRequests);
-//        dto.setCreatedOn(model.getCreatedOn());
-//        dto.setDescription(model.getDescription());
-//        dto.setEventDate(model.getEventDate());
-//        UserShortDto userShortDto = new UserShortDto();
-//        userShortDto.setId(model.getInitiator().getId());
-//        userShortDto.setName(model.getInitiator().getName());
-//        dto.setInitiator(userShortDto);
-//        Location location = new Location();
-//        location.setLat(model.getLocationLat());
-//        location.setLon(model.getLocationLon());
-//        dto.setLocation(location);
-//        dto.setPaid(model.getPaid());
-//        dto.setParticipantLimit(model.getParticipantLimit());
-//        dto.setPublishedOn(model.getPublishedOn());
-//        dto.setRequestModeration(model.getRequestModeration());
-//        dto.setState(model.getState());
-//        dto.setTitle(model.getTitle());
-//        dto.setViews(views);
-//        return dto;
-//    }
-
     public Event patchMappingToModel(UpdateEventUserRequest updateDto, Optional<Category> category, Event existEvent) {
         ObjectMapper mapper = ObjectMapperConfig.getPatchMapperConfig();
         Map<String, String> updateDtoMap = mapper.convertValue(updateDto, Map.class);
