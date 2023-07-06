@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
+import ru.practicum.event.dto.EventFullDto.ParticipationConfig;
+import ru.practicum.event.dto.EventFullDto.Statistic;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
@@ -43,33 +45,58 @@ public class EventMapper {
 
     public EventFullDto toFullDto(Event model, Integer confirmedRequests, Integer views) {
         EventFullDto dto = new EventFullDto();
+        Statistic statistic = new Statistic(confirmedRequests, views);
+        Location location = new Location(model.getLocationLat(), model.getLocationLon());
+        UserShortDto userShortDto = new UserShortDto(model.getInitiator().getId(), model.getInitiator().getName());
+        CategoryDto categoryDto = new CategoryDto(model.getCategory().getId(), model.getCategory().getName());
+        ParticipationConfig participation = new ParticipationConfig(model.getRequestModeration(),
+                                                                    model.getParticipantLimit(),
+                                                                    model.getPaid(),
+                                                                    location,
+                                                                    model.getEventDate());
         dto.setId(model.getId());
-        dto.setAnnotation(model.getAnnotation());
-        CategoryDto categoryDto = new CategoryDto();
-        categoryDto.setId(model.getCategory().getId());
-        categoryDto.setName(model.getCategory().getName());
-        dto.setCategory(categoryDto);
-        dto.setConfirmedRequests(confirmedRequests);
-        dto.setCreatedOn(model.getCreatedOn());
-        dto.setDescription(model.getDescription());
-        dto.setEventDate(model.getEventDate());
-        UserShortDto userShortDto = new UserShortDto();
-        userShortDto.setId(model.getInitiator().getId());
-        userShortDto.setName(model.getInitiator().getName());
-        dto.setInitiator(userShortDto);
-        Location location = new Location();
-        location.setLat(model.getLocationLat());
-        location.setLon(model.getLocationLon());
-        dto.setLocation(location);
-        dto.setPaid(model.getPaid());
-        dto.setParticipantLimit(model.getParticipantLimit());
-        dto.setPublishedOn(model.getPublishedOn());
-        dto.setRequestModeration(model.getRequestModeration());
-        dto.setState(model.getState());
         dto.setTitle(model.getTitle());
-        dto.setViews(views);
+        dto.setAnnotation(model.getAnnotation());
+        dto.setDescription(model.getDescription());
+        dto.setCategory(categoryDto);
+        dto.setInitiator(userShortDto);
+        dto.setStatistic(statistic);
+        dto.setParticipationConfig(participation);
+        dto.setCreatedOn(model.getCreatedOn());
+        dto.setPublishedOn(model.getPublishedOn());
+        dto.setState(model.getState());
         return dto;
     }
+
+//    public EventFullDto toFullDto(Event model, Integer confirmedRequests, Integer views) {
+//        EventFullDto dto = new EventFullDto();
+//        dto.setId(model.getId());
+//        dto.setAnnotation(model.getAnnotation());
+//        CategoryDto categoryDto = new CategoryDto();
+//        categoryDto.setId(model.getCategory().getId());
+//        categoryDto.setName(model.getCategory().getName());
+//        dto.setCategory(categoryDto);
+//        dto.setConfirmedRequests(confirmedRequests);
+//        dto.setCreatedOn(model.getCreatedOn());
+//        dto.setDescription(model.getDescription());
+//        dto.setEventDate(model.getEventDate());
+//        UserShortDto userShortDto = new UserShortDto();
+//        userShortDto.setId(model.getInitiator().getId());
+//        userShortDto.setName(model.getInitiator().getName());
+//        dto.setInitiator(userShortDto);
+//        Location location = new Location();
+//        location.setLat(model.getLocationLat());
+//        location.setLon(model.getLocationLon());
+//        dto.setLocation(location);
+//        dto.setPaid(model.getPaid());
+//        dto.setParticipantLimit(model.getParticipantLimit());
+//        dto.setPublishedOn(model.getPublishedOn());
+//        dto.setRequestModeration(model.getRequestModeration());
+//        dto.setState(model.getState());
+//        dto.setTitle(model.getTitle());
+//        dto.setViews(views);
+//        return dto;
+//    }
 
     public Event patchMappingToModel(UpdateEventUserRequest updateDto, Optional<Category> category, Event existEvent) {
         ObjectMapper mapper = ObjectMapperConfig.getPatchMapperConfig();
