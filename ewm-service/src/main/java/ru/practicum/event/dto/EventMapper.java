@@ -3,15 +3,20 @@ package ru.practicum.event.dto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
+
 import ru.practicum.comment.dto.CommentDto;
+
 import ru.practicum.event.dto.EventFullDto.ParticipationConfig;
 import ru.practicum.event.dto.EventFullDto.Statistic;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
+
 import ru.practicum.user.dto.UserShortDto;
+
 import ru.practicum.utils.ObjectMapperConfig;
 
 import java.time.LocalDateTime;

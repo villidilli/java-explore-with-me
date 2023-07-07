@@ -2,7 +2,9 @@ package ru.practicum.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+
 import lombok.*;
+
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.event.model.EventState;
