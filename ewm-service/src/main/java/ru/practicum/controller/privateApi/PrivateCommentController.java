@@ -45,11 +45,9 @@ public class PrivateCommentController {
 
     @GetMapping("/{userId}/events/{eventId}/comments")
     public List<CommentDto> getCommentsByEvent(@PathVariable Long userId,
-                                               @PathVariable Long eventId,
-                                               @RequestParam(defaultValue = "0") Integer from,
-                                               @RequestParam(defaultValue = "10") Integer size) {
+                                               @PathVariable Long eventId) {
         log.debug("/get comments by event");
-        return commentService.getCommentsByEventFromUser(userId, eventId, from, size);
+        return commentService.getCommentsByEventFromUser(userId, eventId);
     }
 
     @PatchMapping("/{userId}/comments/{commentId}")

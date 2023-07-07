@@ -13,7 +13,9 @@ public interface CommentService {
 
     List<CommentDto> getCommentsByUser(Long userId, Integer from, Integer size);
 
-    List<CommentDto> getCommentsByEventFromUser(Long userId, Long eventId, Integer from, Integer size);
+    List<CommentDto> getCommentsByEventFromUser(Long userId, Long eventId);
+
+    List<CommentDto> getCommentsByEventFromAdmin(Long eventId);
 
     CommentDto updateComment(Long userId, Long commentId, UpdateCommentDto updateDto);
 
@@ -24,6 +26,4 @@ public interface CommentService {
     List<CommentDto> getAllComments(Integer from, Integer size);
 
     CommentDto getCommentByIdFromAdmin(Long commentId);
-
-    List<CommentDto> getCommentsByEventFromAdmin(Long eventId, Integer from, Integer size);
 }

@@ -38,11 +38,9 @@ public class AdminCommentController {
     }
 
     @GetMapping("/events/{eventId}/comments")
-    public List<CommentDto> getCommentsByEvent(@PathVariable Long eventId,
-                                               @RequestParam(defaultValue = "0") Integer from,
-                                               @RequestParam(defaultValue = "10") Integer size) {
+    public List<CommentDto> getCommentsByEvent(@PathVariable Long eventId) {
         log.debug("/get comments by event");
-        return commentService.getCommentsByEventFromAdmin(eventId, from, size);
+        return commentService.getCommentsByEventFromAdmin(eventId);
     }
 
     @DeleteMapping("/comments/{commentId}")

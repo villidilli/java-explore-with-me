@@ -2,30 +2,24 @@ package ru.practicum.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.CommentMapper;
 import ru.practicum.comment.dto.NewCommentDto;
 import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.comment.model.Comment;
 import ru.practicum.comment.repository.CommentRepository;
-
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
-
 import ru.practicum.exception.FieldConflictException;
 import ru.practicum.exception.NotFoundException;
-
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
-
 import ru.practicum.utils.PageConfig;
 
 import java.util.List;
@@ -42,6 +36,7 @@ public class CommentServiceImpl implements CommentService {
     private final EventRepository eventRepository;
 
     @Override
+    @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto commentDto) {
         log.debug("/create comment");
         User commentator = getExistedUser(userId);
@@ -66,26 +61,37 @@ public class CommentServiceImpl implements CommentService {
         log.debug("/get comments by user");
         getExistedUser(userId);
         PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
-        Page<Comment> searchedComment = commentRepository.getCommentsByUser(userId, pageRequest);
+        Page<Comment> searchedComment = commentRepository.findAllByCommentator_Id(userId, pageRequest);
         return searchedComment.stream()
                 .map(CommentMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<CommentDto> getCommentsByEventFromUser(Long userId, Long eventId, Integer from, Integer size) {
+    public List<CommentDto> getCommentsByEventFromUser(Long userId, Long eventId) {
         log.debug("/get comments by event from user");
         //получение всех комментариев к событию, в т.ч. к чужому без ограничений
         User commentsRequester = getExistedUser(userId);
         Event existedEvent = getExistedEvent(eventId);
-        PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
-        Page<Comment> searchedComments = commentRepository.getCommentsByEvent(eventId, pageRequest);
+        List<Comment> searchedComments = commentRepository.findAllByEvent_Id(eventId);
+        return searchedComments.stream()
+                .map(CommentMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public List<CommentDto> getCommentsByEventFromAdmin(Long eventId) {
+        log.debug("/get comments by event from admin");
+        Event existedEvent = getExistedEvent(eventId);
+        List<Comment> searchedComments = commentRepository.findAllByEvent_Id(eventId);
         return searchedComments.stream()
                 .map(CommentMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public CommentDto updateComment(Long userId, Long commentId, UpdateCommentDto updateDto) {
         log.debug("/update comment");
         User requester = getExistedUser(userId);
@@ -97,6 +103,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteCommentFromUser(Long userId, Long commentId) {
         log.debug("/delete comment");
         User requester = getExistedUser(userId);
@@ -106,6 +113,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteCommentFromAdmin(Long commentId) {
         log.debug("/delete comment from admin");
         Comment existedComment = getExistedComment(commentId);
@@ -127,18 +135,6 @@ public class CommentServiceImpl implements CommentService {
         Comment existedComment = getExistedComment(commentId);
         return CommentMapper.toDto(existedComment);
     }
-
-    @Override
-    public List<CommentDto> getCommentsByEventFromAdmin(Long eventId, Integer from, Integer size) {
-        log.debug("/get comments by event from admin");
-        Event existedEvent = getExistedEvent(eventId);
-        PageRequest pageRequest = new PageConfig(from, size, Sort.unsorted());
-        Page<Comment> searchedComments = commentRepository.getCommentsByEvent(eventId, pageRequest);
-        return searchedComments.stream()
-                .map(CommentMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
 
     private void checkConstraintRequesterIsCommentOwner(User requester, Comment existedComment)
                                                                                         throws FieldConflictException {
