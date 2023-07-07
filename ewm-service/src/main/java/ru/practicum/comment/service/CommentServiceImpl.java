@@ -154,17 +154,17 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
-    private Comment getExistedComment(Long commentId) {
+    private Comment getExistedComment(Long commentId) throws NotFoundException {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment with id: " + commentId + " not found"));
     }
 
-    private User getExistedUser(Long userId) {
+    private User getExistedUser(Long userId) throws NotFoundException {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id: " + userId + " not found"));
     }
 
-    private Event getExistedEvent(Long eventId) {
+    private Event getExistedEvent(Long eventId) throws NotFoundException {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id: " + eventId + " not found"));
     }

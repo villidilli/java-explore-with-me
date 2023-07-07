@@ -1,6 +1,7 @@
 package ru.practicum.comment.dto;
 
 import lombok.experimental.UtilityClass;
+
 import ru.practicum.comment.model.Comment;
 import ru.practicum.event.model.Event;
 import ru.practicum.user.model.User;
