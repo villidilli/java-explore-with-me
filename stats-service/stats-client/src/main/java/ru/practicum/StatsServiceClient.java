@@ -6,7 +6,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import ru.practicum.dto.HitRequestDto;
 import ru.practicum.dto.ViewStatsDto;
 
@@ -34,7 +33,7 @@ public class StatsServiceClient {
                 .block();
     }
 
-    public ResponseEntity<List<ViewStatsDto>> getViewStats(String start, String  end, String[] uris, boolean unique) {
+    public ResponseEntity<List<ViewStatsDto>> getViewStats(String start, String  end, String[] uris, Boolean unique) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/stats")
