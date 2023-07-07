@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @UtilityClass
 public class CommentMapper {
+
     public Comment toModel(NewCommentDto dto, User commentator, Event event) {
         Comment model = new Comment();
         model.setText(dto.getText());

@@ -2,24 +2,30 @@ package ru.practicum.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.CommentMapper;
 import ru.practicum.comment.dto.NewCommentDto;
 import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.comment.model.Comment;
 import ru.practicum.comment.repository.CommentRepository;
+
 import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
+
 import ru.practicum.exception.FieldConflictException;
 import ru.practicum.exception.NotFoundException;
+
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
+
 import ru.practicum.utils.PageConfig;
 
 import java.util.List;
@@ -51,7 +57,7 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto getCommentByIdFromUser(Long userId, Long commentId) {
         //пользователь может получать все комментарии, в т.ч. не свои
         log.debug("/get comment by id from user");
-        User commentRequester = getExistedUser(userId);
+        getExistedUser(userId);
         Comment existedComment = getExistedComment(commentId);
         return CommentMapper.toDto(existedComment);
     }
@@ -71,8 +77,8 @@ public class CommentServiceImpl implements CommentService {
     public List<CommentDto> getCommentsByEventFromUser(Long userId, Long eventId) {
         log.debug("/get comments by event from user");
         //получение всех комментариев к событию, в т.ч. к чужому без ограничений
-        User commentsRequester = getExistedUser(userId);
-        Event existedEvent = getExistedEvent(eventId);
+        getExistedUser(userId);
+        getExistedEvent(eventId);
         List<Comment> searchedComments = commentRepository.findAllByEvent_Id(eventId);
         return searchedComments.stream()
                 .map(CommentMapper::toDto)
@@ -83,7 +89,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public List<CommentDto> getCommentsByEventFromAdmin(Long eventId) {
         log.debug("/get comments by event from admin");
-        Event existedEvent = getExistedEvent(eventId);
+        getExistedEvent(eventId);
         List<Comment> searchedComments = commentRepository.findAllByEvent_Id(eventId);
         return searchedComments.stream()
                 .map(CommentMapper::toDto)
@@ -116,7 +122,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public void deleteCommentFromAdmin(Long commentId) {
         log.debug("/delete comment from admin");
-        Comment existedComment = getExistedComment(commentId);
+        getExistedComment(commentId);
         commentRepository.deleteById(commentId);
     }
 
