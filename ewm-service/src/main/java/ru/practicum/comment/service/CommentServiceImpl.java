@@ -12,8 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.dto.CommentMapper;
-import ru.practicum.comment.dto.NewCommentDto;
-import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.comment.model.Comment;
 import ru.practicum.comment.repository.CommentRepository;
 
@@ -43,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentDto createComment(Long userId, Long eventId, NewCommentDto commentDto) {
+    public CommentDto createComment(Long userId, Long eventId, CommentDto commentDto) {
         log.debug("/create comment");
         User commentator = getExistedUser(userId);
         Event event = getExistedEvent(eventId);
@@ -98,7 +96,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentDto updateComment(Long userId, Long commentId, UpdateCommentDto updateDto) {
+    public CommentDto updateComment(Long userId, Long commentId, CommentDto updateDto) {
         log.debug("/update comment");
         User requester = getExistedUser(userId);
         Comment existedComment = getExistedComment(commentId);

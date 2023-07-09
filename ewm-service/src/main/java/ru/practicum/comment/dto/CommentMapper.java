@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @UtilityClass
 public class CommentMapper {
 
-    public Comment toModel(NewCommentDto dto, User commentator, Event event) {
+    public Comment toModel(CommentDto dto, User commentator, Event event) {
         Comment model = new Comment();
         model.setText(dto.getText());
         model.setCommentator(commentator);
@@ -20,7 +20,7 @@ public class CommentMapper {
         return model;
     }
 
-    public Comment patchModel(UpdateCommentDto dto, Comment existedComment) {
+    public Comment patchModel(CommentDto dto, Comment existedComment) {
         existedComment.setText(dto.getText());
         existedComment.setTimestamp(LocalDateTime.now());
         return existedComment;

@@ -8,9 +8,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import ru.practicum.comment.dto.CommentDto;
-import ru.practicum.comment.dto.NewCommentDto;
-import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.comment.service.CommentService;
+import ru.practicum.validation.ValidateMarker;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -26,10 +25,11 @@ public class PrivateCommentController {
     private final CommentService commentService;
 
     @PostMapping("/comments")
+    @Validated({ValidateMarker.OnCreate.class})
     @ResponseStatus(HttpStatus.CREATED)
     public CommentDto createComment(@PathVariable Long userId,
                                     @RequestParam Long eventId,
-                                    @Valid @RequestBody NewCommentDto commentDto) {
+                                    @Valid @RequestBody CommentDto commentDto) {
         log.debug("/create comment");
         return commentService.createComment(userId, eventId, commentDto);
     }
@@ -57,9 +57,10 @@ public class PrivateCommentController {
     }
 
     @PatchMapping("/comments/{commentId}")
+    @Validated({ValidateMarker.OnUpdate.class})
     public CommentDto updateComment(@PathVariable Long userId,
                                     @PathVariable Long commentId,
-                                    @Valid @RequestBody UpdateCommentDto updateDto) {
+                                    @Valid @RequestBody CommentDto updateDto) {
         log.debug("/update comment");
         return commentService.updateComment(userId, commentId, updateDto);
     }
