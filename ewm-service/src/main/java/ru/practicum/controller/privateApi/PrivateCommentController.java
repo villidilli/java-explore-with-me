@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import ru.practicum.comment.dto.CommentDto;
@@ -12,16 +13,19 @@ import ru.practicum.comment.dto.UpdateCommentDto;
 import ru.practicum.comment.service.CommentService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/users")
+@RequestMapping("/users/{userId}")
+@Validated
 public class PrivateCommentController {
     private final CommentService commentService;
 
-    @PostMapping("/{userId}/comments")
+    @PostMapping("/comments")
     @ResponseStatus(HttpStatus.CREATED)
     public CommentDto createComment(@PathVariable Long userId,
                                     @RequestParam Long eventId,
@@ -30,29 +34,29 @@ public class PrivateCommentController {
         return commentService.createComment(userId, eventId, commentDto);
     }
 
-    @GetMapping("/{userId}/comments/{commentId}")
+    @GetMapping("/comments/{commentId}")
     public CommentDto getCommentById(@PathVariable Long userId,
                                      @PathVariable Long commentId) {
         log.debug("/get comment by id by user");
         return commentService.getCommentByIdFromUser(userId, commentId);
     }
 
-    @GetMapping("/{userId}/comments")
+    @GetMapping("/comments")
     public List<CommentDto> getCommentsByUser(@PathVariable Long userId,
-                                              @RequestParam(defaultValue = "0") Integer from,
-                                              @RequestParam(defaultValue = "10") Integer size) {
+                                              @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                              @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.debug("/get comments by user");
         return commentService.getCommentsByUser(userId, from, size);
     }
 
-    @GetMapping("/{userId}/events/{eventId}/comments")
+    @GetMapping("/events/{eventId}/comments")
     public List<CommentDto> getCommentsByEvent(@PathVariable Long userId,
                                                @PathVariable Long eventId) {
         log.debug("/get comments by event");
         return commentService.getCommentsByEventFromUser(userId, eventId);
     }
 
-    @PatchMapping("/{userId}/comments/{commentId}")
+    @PatchMapping("/comments/{commentId}")
     public CommentDto updateComment(@PathVariable Long userId,
                                     @PathVariable Long commentId,
                                     @Valid @RequestBody UpdateCommentDto updateDto) {
@@ -60,7 +64,7 @@ public class PrivateCommentController {
         return commentService.updateComment(userId, commentId, updateDto);
     }
 
-    @DeleteMapping("/{userId}/comments/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable Long userId,
                               @PathVariable Long commentId) {

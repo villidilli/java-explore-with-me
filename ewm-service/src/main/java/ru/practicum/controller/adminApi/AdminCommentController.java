@@ -4,23 +4,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.service.CommentService;
 
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/admin")
+@Validated
 public class AdminCommentController {
     private final CommentService commentService;
 
     @GetMapping("/comments")
-    public List<CommentDto> getAllComments(@RequestParam(defaultValue = "0") Integer from,
-                                           @RequestParam(defaultValue = "10") Integer size) {
+    public List<CommentDto> getAllComments(@RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                           @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.debug("/get all comments");
         return commentService.getAllComments(from, size);
     }
@@ -33,8 +37,8 @@ public class AdminCommentController {
 
     @GetMapping("/users/{userId}/comments")
     public List<CommentDto> getCommentsByUser(@PathVariable Long userId,
-                                              @RequestParam(defaultValue = "0") Integer from,
-                                              @RequestParam(defaultValue = "10") Integer size) {
+                                              @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                              @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.debug("/get comments by user");
         return commentService.getCommentsByUser(userId, from, size);
     }
