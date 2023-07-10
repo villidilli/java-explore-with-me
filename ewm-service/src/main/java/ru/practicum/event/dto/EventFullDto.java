@@ -2,14 +2,18 @@ package ru.practicum.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+
 import lombok.*;
+
 import ru.practicum.category.dto.CategoryDto;
+import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.utils.Constant;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,7 +36,7 @@ public class EventFullDto {
     @JsonFormat(pattern = Constant.dateTimeFormat)
     private LocalDateTime publishedOn;
     private EventState state;
-
+    private List<CommentDto> comments;
 
     @Getter
     @Setter

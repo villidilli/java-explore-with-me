@@ -2,28 +2,40 @@ package ru.practicum.event.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.practicum.StatsServiceClient;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
+import ru.practicum.comment.dto.CommentDto;
+import ru.practicum.comment.dto.CommentMapper;
+import ru.practicum.comment.model.Comment;
+import ru.practicum.comment.repository.CommentRepository;
+
 import ru.practicum.dto.ViewStatsDto;
+
 import ru.practicum.event.dto.*;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.repository.EventRepository;
+
 import ru.practicum.exception.FieldConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidateException;
+
 import ru.practicum.request.model.CountEventRequests;
 import ru.practicum.request.model.ParticipationRequestState;
 import ru.practicum.request.repository.ParticipationRequestRepository;
+
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
+
 import ru.practicum.utils.Constant;
 import ru.practicum.utils.EventViewSort;
 import ru.practicum.utils.PageConfig;
@@ -42,6 +54,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final ParticipationRequestRepository requestRepository;
     private final CategoryRepository categoryRepository;
+    private final CommentRepository commentRepository;
     private final StatsServiceClient statsClient;
 
     @Override
@@ -55,7 +68,7 @@ public class EventServiceImpl implements EventService {
         eventToSave.setCategory(existedCategory);
         Event savedEvent = eventRepository.save(eventToSave);
         log.debug("Saved Event id: {}", savedEvent.getId());
-        return EventMapper.toFullDto(savedEvent,0, 0);
+        return EventMapper.toFullDto(savedEvent,0, 0, getComments(savedEvent.getId()));
     }
 
     @Override
@@ -70,7 +83,7 @@ public class EventServiceImpl implements EventService {
                                                              existedEvent);
         Integer confirmedRequests = requestRepository.countAllByStatusIs(ParticipationRequestState.CONFIRMED);
         Event savedEvent = eventRepository.save(updatedEvent);
-        return EventMapper.toFullDto(savedEvent, confirmedRequests, getCountViews(eventId));
+        return EventMapper.toFullDto(savedEvent, confirmedRequests, getCountViews(eventId), getComments(eventId));
     }
 
     @Override
@@ -85,7 +98,7 @@ public class EventServiceImpl implements EventService {
                                                              existedEvent);
         Integer confirmedRequests = requestRepository.countAllByStatusIs(ParticipationRequestState.CONFIRMED);
         Event savedEvent = eventRepository.save(updatedEvent);
-        return EventMapper.toFullDto(savedEvent, confirmedRequests, getCountViews(eventId));
+        return EventMapper.toFullDto(savedEvent, confirmedRequests, getCountViews(eventId), getComments(eventId));
     }
 
     @Override
@@ -108,7 +121,8 @@ public class EventServiceImpl implements EventService {
         Event existedEvent = getExistedEvent(eventId);
         return EventMapper.toFullDto(existedEvent,
                                      requestRepository.countAllByEvent_IdIs(eventId),
-                                     getCountViews(eventId));
+                                     getCountViews(eventId),
+                                     getComments(eventId));
     }
 
     @Override
@@ -119,7 +133,7 @@ public class EventServiceImpl implements EventService {
         Integer confirmedRequests = requestRepository.countAllByEvent_IdIs(eventId);
         Integer views = getCountViews(eventId);
         saveEndpointHit(Constant.mainAppName, request);
-        return EventMapper.toFullDto(existedEvent, confirmedRequests, views);
+        return EventMapper.toFullDto(existedEvent, confirmedRequests, views, getComments(eventId));
     }
 
     @Override
@@ -169,7 +183,26 @@ public class EventServiceImpl implements EventService {
                         .collect(Collectors.toList());
         Map<Long, Long> eventIdConfirmedRequestsMap = getConfirmedRequests(searchedEvents);
         Map<Long, Long> eventIdCountHits = getViews(searchedEvents);
-        return setRequestsAndViewsFullDto(searchedEvents, eventIdConfirmedRequestsMap, eventIdCountHits);
+        Map<Long, List<CommentDto>> eventIdListComments = getCommentsForSearch(searchedEvents);
+        return setRequestsViewsCommentsToFullDto(searchedEvents,
+                                                 eventIdConfirmedRequestsMap,
+                                                 eventIdCountHits,
+                                                 eventIdListComments);
+    }
+
+    private Map<Long, List<CommentDto>> getCommentsForSearch(List<Event> searchedEvents) {
+        Map<Long, List<CommentDto>> eventIdComments = searchedEvents.stream()
+                .collect(Collectors.toMap(Event::getId, list -> Collections.emptyList()));
+        List<Comment> allComments = commentRepository.findAllById(eventIdComments.keySet());
+        allComments.forEach(comment -> {
+           List<CommentDto> eventComments = eventIdComments.getOrDefault(comment.getEvent().getId(),
+                                                                        new ArrayList<>());
+           if (comment != null) {
+               eventComments.add(CommentMapper.toDto(comment));
+           }
+           eventIdComments.put(comment.getEvent().getId(), eventComments);
+        });
+        return eventIdComments;
     }
 
     private void checkOnlyAvailableParam(Boolean onlyAvailable, List<Event> searchedEvents,
@@ -321,8 +354,9 @@ public class EventServiceImpl implements EventService {
         return resultList;
     }
 
-    private List<EventFullDto> setRequestsAndViewsFullDto(List<Event> searchedEvents, Map<Long, Long> requests,
-                                                                                                Map<Long, Long> views) {
+    private List<EventFullDto> setRequestsViewsCommentsToFullDto(List<Event> searchedEvents, Map<Long, Long> requests,
+                                                                 Map<Long, Long> views,
+                                                                 Map<Long, List<CommentDto>> comments) {
             List<EventFullDto> resultList = new ArrayList<>();
             searchedEvents.stream().forEach(event -> {
                 int requestsToSave = 0;
@@ -333,8 +367,16 @@ public class EventServiceImpl implements EventService {
                 if (views.containsKey(event.getId())) {
                     viewsToSave = views.get(event.getId()).intValue();
                 }
-                resultList.add(EventMapper.toFullDto(event, requestsToSave, viewsToSave));
+                resultList.add(EventMapper.toFullDto(event, requestsToSave, viewsToSave, comments.get(event.getId())));
             });
             return resultList;
         }
+
+    private List<CommentDto> getComments(Long eventId) {
+        List<Comment> comments = commentRepository.findAllByEvent_Id(eventId);
+        if (comments == null) return Collections.emptyList();
+        return comments.stream()
+                .map(CommentMapper::toDto)
+                .collect(Collectors.toList());
+    }
 }

@@ -6,15 +6,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
+
+import ru.practicum.comment.dto.CommentDto;
+
 import ru.practicum.event.dto.EventFullDto.ParticipationConfig;
 import ru.practicum.event.dto.EventFullDto.Statistic;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
+
 import ru.practicum.user.dto.UserShortDto;
+
 import ru.practicum.utils.ObjectMapperConfig;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,7 +49,7 @@ public class EventMapper {
         return model;
     }
 
-    public EventFullDto toFullDto(Event model, Integer confirmedRequests, Integer views) {
+    public EventFullDto toFullDto(Event model, Integer confirmedRequests, Integer views, List<CommentDto> comments) {
         EventFullDto dto = new EventFullDto();
         Statistic statistic = new Statistic(confirmedRequests, views);
         Location location = new Location(model.getLocationLat(), model.getLocationLon());
@@ -65,6 +71,7 @@ public class EventMapper {
         dto.setCreatedOn(model.getCreatedOn());
         dto.setPublishedOn(model.getPublishedOn());
         dto.setState(model.getState());
+        dto.setComments(comments);
         return dto;
     }
 
